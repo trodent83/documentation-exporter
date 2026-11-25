@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation Portal
+    url: https://github.com/trodent83/documentation-exporter/blob/main/docs/index.md
+    about: Check the User, Developer, and Architecture guides before opening a question or issue.
+  - name: Security Vulnerability Reporting
+    url: https://github.com/trodent83/documentation-exporter/security/policy
+    about: Report security issues privately instead of opening a public issue.

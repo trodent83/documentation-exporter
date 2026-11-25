@@ -1,0 +1,36 @@
+name: Feature Request
+description: Propose a new capability, C# language feature, diagram/navigation format, or plugin extension point.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: Describe the documentation workflow or C#/.NET use case that is currently missing or difficult.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the desired CLI option, JSON config property, generated Markdown/diagram output, or Abstractions SPI extension.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you tried workarounds (e.g., sidecar `.md` overrides, `--external-docs` rules, or a custom plugin)?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be interested in opening a PR for this feature (following `CONTRIBUTING.md`).

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AssemblyFilePathRequired" xml:space="preserve">
+    <value>AssemblyFilePath is required.</value>
+  </data>
+  <data name="AssemblyFilePathMinLength" xml:space="preserve">
+    <value>AssemblyFilePath cannot be empty.</value>
+  </data>
+  <data name="XmlDocumentationFilePathRequired" xml:space="preserve">
+    <value>XmlDocumentationFilePath is required.</value>
+  </data>
+  <data name="XmlDocumentationFilePathMinLength" xml:space="preserve">
+    <value>XmlDocumentationFilePath cannot be empty.</value>
+  </data>
+  <data name="OutputDirectoryPathRequired" xml:space="preserve">
+    <value>OutputDirectoryPath is required.</value>
+  </data>
+  <data name="OutputDirectoryPathMinLength" xml:space="preserve">
+    <value>OutputDirectoryPath cannot be empty.</value>
+  </data>
+  <data name="MicrosoftDocsBaseUrlRequired" xml:space="preserve">
+    <value>MicrosoftDocsBaseUrl is required.</value>
+  </data>
+  <data name="MicrosoftDocsBaseUrlMinLength" xml:space="preserve">
+    <value>MicrosoftDocsBaseUrl cannot be empty.</value>
+  </data>
+  <data name="TargetNameRequired" xml:space="preserve">
+    <value>TargetName is required.</value>
+  </data>
+  <data name="TargetNameMinLength" xml:space="preserve">
+    <value>TargetName cannot be empty.</value>
+  </data>
+  <data name="CustomMarkdownContentRequired" xml:space="preserve">
+    <value>CustomMarkdownContent is required.</value>
+  </data>
+  <data name="MemberNameRequired" xml:space="preserve">
+    <value>Member name is required.</value>
+  </data>
+  <data name="MemberNameMinLength" xml:space="preserve">
+    <value>Member name cannot be empty.</value>
+  </data>
+  <data name="ParameterNameRequired" xml:space="preserve">
+    <value>Parameter name is required.</value>
+  </data>
+  <data name="ParameterNameMinLength" xml:space="preserve">
+    <value>Parameter name cannot be empty.</value>
+  </data>
+  <data name="ParameterTypeNameRequired" xml:space="preserve">
+    <value>Parameter type name is required.</value>
+  </data>
+  <data name="TypeNameRequired" xml:space="preserve">
+    <value>TypeName is required.</value>
+  </data>
+  <data name="TypeNameMinLength" xml:space="preserve">
+    <value>TypeName cannot be empty.</value>
+  </data>
+  <data name="NamespaceNameRequired" xml:space="preserve">
+    <value>NamespaceName is required.</value>
+  </data>
+  <data name="NamespacePrefixRequired" xml:space="preserve">
+    <value>NamespacePrefix is required.</value>
+  </data>
+  <data name="NamespacePrefixMinLength" xml:space="preserve">
+    <value>NamespacePrefix cannot be empty.</value>
+  </data>
+  <data name="UrlTemplateRequired" xml:space="preserve">
+    <value>UrlTemplate is required.</value>
+  </data>
+  <data name="UrlTemplateMinLength" xml:space="preserve">
+    <value>UrlTemplate cannot be empty.</value>
+  </data>
+  <data name="FailOnUndocumentedThresholdRange" xml:space="preserve">
+    <value>FailOnUndocumentedThreshold must be between 0 and 100.</value>
+  </data>
+  <data name="DiagramFormatInvalid" xml:space="preserve">
+    <value>DiagramFormat must be a valid DiagramFormat value.</value>
+  </data>
+  <data name="TypeCategoryInvalid" xml:space="preserve">
+    <value>TypeCategory must be a valid TypeCategory value.</value>
+  </data>
+  <data name="TargetAnchorInvalid" xml:space="preserve">
+    <value>TargetAnchor must be a valid SidecarAnchor value.</value>
+  </data>
+  <data name="InjectionModeInvalid" xml:space="preserve">
+    <value>InjectionMode must be a valid InjectionMode value.</value>
+  </data>
+  <data name="ReferenceNameRequired" xml:space="preserve">
+    <value>ReferenceName is required.</value>
+  </data>
+  <data name="ReferenceNameMinLength" xml:space="preserve">
+    <value>ReferenceName cannot be empty.</value>
+  </data>
+  <data name="ReferenceKindInvalid" xml:space="preserve">
+    <value>ReferenceKind must be a valid AssemblyReferenceKind value.</value>
+  </data>
+  <data name="VersionLinkingKindInvalid" xml:space="preserve">
+    <value>VersionLinkingKind must be a valid AssemblyVersionLinkingKind value.</value>
+  </data>
+  <data name="DependencySourceNameRequired" xml:space="preserve">
+    <value>SourceAssemblyName is required.</value>
+  </data>
+  <data name="DependencySourceNameMinLength" xml:space="preserve">
+    <value>SourceAssemblyName must contain at least 1 character.</value>
+  </data>
+  <data name="ReportFormatInvalid" xml:space="preserve">
+    <value>ReportFormat must be a valid QualityReportFormat value.</value>
+  </data>
+  <data name="NavigationFormatInvalid" xml:space="preserve">
+    <value>NavigationFormat must be a valid NavigationFormat value.</value>
+  </data>
+  <data name="DiagnosticCodeRequired" xml:space="preserve">
+    <value>Diagnostic code is required.</value>
+  </data>
+  <data name="DiagnosticMessageRequired" xml:space="preserve">
+    <value>Diagnostic message is required.</value>
+  </data>
+  <data name="DiagnosticSeverityInvalid" xml:space="preserve">
+    <value>Diagnostic severity must be a valid DocumentationDiagnosticSeverity value.</value>
+  </data>
+  <data name="DiagnosticKindInvalid" xml:space="preserve">
+    <value>Diagnostic kind must be a valid DocumentationDiagnosticKind value.</value>
+  </data>
+  <data name="CoveragePercentageRange" xml:space="preserve">
+    <value>CoveragePercentage must be between 0 and 100.</value>
+  </data>
+  <data name="PluginNameRequired" xml:space="preserve">
+    <value>PluginName is required.</value>
+  </data>
+  <data name="PluginAssemblyPathRequired" xml:space="preserve">
+    <value>AssemblyPath is required.</value>
+  </data>
+  <data name="PluginTypeFullNameRequired" xml:space="preserve">
+    <value>PluginTypeFullName is required.</value>
+  </data>
+</root>

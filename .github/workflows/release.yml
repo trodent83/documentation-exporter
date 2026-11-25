@@ -1,0 +1,605 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semantic version increment when version is omitted
+        required: true
+        type: choice
+        default: auto
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      version:
+        description: Optional explicit SemVer version override (e.g. 1.0.0 or 1.0.0-rc.1)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-pipeline
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '11.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  verify:
+    name: Verify Release
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.semver.outputs.should_release }}
+      version: ${{ steps.semver.outputs.version }}
+      tag: ${{ steps.semver.outputs.tag }}
+      is_prerelease: ${{ steps.semver.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: semver
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $semverPattern = '^v(?<core>(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?<pre>-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?<meta>\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$'
+
+          function Write-ReleaseOutputs {
+            param(
+              [string]$ShouldRelease,
+              [string]$Version = '',
+              [string]$Tag = '',
+              [string]$IsPrerelease = 'false',
+              [string]$Reason = ''
+            )
+            "should_release=$ShouldRelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "version=$Version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "tag=$Tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "is_prerelease=$IsPrerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+            if ($env:GITHUB_STEP_SUMMARY) {
+              if ($ShouldRelease -eq 'true') {
+                "### Release Plan: ``$Tag`` (version ``$Version``, prerelease: ``$IsPrerelease``)`n`n$Reason" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              } else {
+                "### Release Skipped`n`n$Reason" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              }
+            }
+          }
+
+          $eventName = '${{ github.event_name }}'
+          $refType = '${{ github.ref_type }}'
+          $refName = '${{ github.ref_name }}'
+          $explicitInputVersion = '${{ inputs.version }}'.Trim()
+          $requestedBump = '${{ inputs.bump }}'.Trim().ToLowerInvariant()
+          if ([string]::IsNullOrWhiteSpace($requestedBump)) { $requestedBump = 'auto' }
+
+          # 1. Manual Git tag push (v*.*.*)
+          if ($eventName -eq 'push' -and $refType -eq 'tag') {
+            if ($refName -notmatch $semverPattern) {
+              throw "Tag '$refName' is not a valid SemVer 2.0 tag prefixed with 'v' (expected e.g. v1.0.0 or v1.2.0-rc.1)."
+            }
+            $version = $refName.Substring(1)
+            $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+            Write-ReleaseOutputs -ShouldRelease 'true' -Version $version -Tag $refName -IsPrerelease $isPrerelease -Reason 'Triggered by explicit SemVer tag push.'
+            exit 0
+          }
+
+          # 2. Manual workflow_dispatch with explicit version input
+          if ($eventName -eq 'workflow_dispatch' -and -not [string]::IsNullOrWhiteSpace($explicitInputVersion)) {
+            $normalizedTag = if ($explicitInputVersion.StartsWith('v', [System.StringComparison]::OrdinalIgnoreCase)) {
+              'v' + $explicitInputVersion.Substring(1)
+            } else {
+              'v' + $explicitInputVersion
+            }
+            if ($normalizedTag -notmatch $semverPattern) {
+              throw "Input version '$explicitInputVersion' is not a valid SemVer 2.0 version (expected e.g. 1.0.0 or 1.2.0-rc.1)."
+            }
+            $existingTag = (git tag --list $normalizedTag | Out-String).Trim()
+            if (-not [string]::IsNullOrWhiteSpace($existingTag)) {
+              throw "Git tag '$normalizedTag' already exists."
+            }
+            $version = $normalizedTag.Substring(1)
+            $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+            Write-ReleaseOutputs -ShouldRelease 'true' -Version $version -Tag $normalizedTag -IsPrerelease $isPrerelease -Reason 'Triggered manually via workflow_dispatch with explicit version.'
+            exit 0
+          }
+
+          # 3. Automatic merge/push to main (or workflow_dispatch bump)
+          $prLabels = @()
+          if ($eventName -eq 'push') {
+            $existingHeadTags = (git tag --points-at HEAD 'v[0-9]*.[0-9]*.[0-9]*' | Out-String).Trim()
+            if (-not [string]::IsNullOrWhiteSpace($existingHeadTags)) {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason "HEAD already has release tag(s): $existingHeadTags."
+              exit 0
+            }
+
+            $commitMessage = (git log -1 --pretty=%B | Out-String)
+            if ($commitMessage -imatch '\[(skip|no)\s+release\]') {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason 'Commit message contains [skip release] / [no release].'
+              exit 0
+            }
+
+            try {
+              $rawLabels = & gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '[.[].labels[].name]' 2>$null
+              if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($rawLabels)) {
+                $parsedLabels = ($rawLabels | Out-String) | ConvertFrom-Json
+                if ($parsedLabels) {
+                  $prLabels = @($parsedLabels | ForEach-Object { $_.ToString().Trim().ToLowerInvariant() })
+                }
+              }
+            }
+            catch {
+              $prLabels = @()
+            }
+            $global:LASTEXITCODE = 0
+
+            if ($prLabels -contains 'skip-release' -or $prLabels -contains 'no-release') {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason 'Merged PR carries the skip-release / no-release label.'
+              exit 0
+            }
+          }
+          else {
+            $commitMessage = (git log -1 --pretty=%B | Out-String)
+          }
+
+          # Determine SemVer bump level
+          $bump = $requestedBump
+          if ($bump -eq 'auto') {
+            if (($prLabels -contains 'breaking-change') -or
+                ($prLabels -contains 'breaking') -or
+                ($commitMessage -match 'BREAKING[ -]CHANGE') -or
+                ($commitMessage -match '(?m)^[a-z]+(\([^)]*\))?!:')) {
+              $bump = 'major'
+            }
+            elseif (($prLabels -contains 'feature') -or
+                    ($prLabels -contains 'enhancement') -or
+                    ($commitMessage -match '(?m)^feat(\([^)]*\))?:')) {
+              $bump = 'minor'
+            }
+            else {
+              $bump = 'patch'
+            }
+          }
+
+          # Compute next stable SemVer from existing vX.Y.Z tags
+          $stableTags = @(git tag --list 'v[0-9]*.[0-9]*.[0-9]*') |
+            Where-Object { $_ -match '^v(?<maj>0|[1-9]\d*)\.(?<min>0|[1-9]\d*)\.(?<pat>0|[1-9]\d*)$' } |
+            ForEach-Object {
+              [void]($_ -match '^v(?<maj>0|[1-9]\d*)\.(?<min>0|[1-9]\d*)\.(?<pat>0|[1-9]\d*)$')
+              [pscustomobject]@{
+                Major = [int]$Matches['maj']
+                Minor = [int]$Matches['min']
+                Patch = [int]$Matches['pat']
+              }
+            } |
+            Sort-Object -Property Major, Minor, Patch -Descending
+
+          if ($stableTags.Count -eq 0) {
+            $nextVersion = if ($bump -eq 'major') { '1.0.0' } else { '0.1.0' }
+          }
+          else {
+            $latest = $stableTags[0]
+            switch ($bump) {
+              'major' { $nextVersion = "$($latest.Major + 1).0.0" }
+              'minor' { $nextVersion = "$($latest.Major).$($latest.Minor + 1).0" }
+              default { $nextVersion = "$($latest.Major).$($latest.Minor).$($latest.Patch + 1)" }
+            }
+          }
+
+          $nextTag = "v$nextVersion"
+          $labelText = if ($prLabels.Count -gt 0) { $prLabels -join ', ' } else { 'none' }
+          Write-ReleaseOutputs -ShouldRelease 'true' -Version $nextVersion -Tag $nextTag -IsPrerelease 'false' -Reason "Automatic **$bump** bump (PR labels: ``$labelText``)."
+
+      - name: Setup .NET SDK
+        if: steps.semver.outputs.should_release == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore, build, and test (Release)
+        if: steps.semver.outputs.should_release == 'true'
+        env:
+          MINVERVERSIONOVERRIDE: ${{ steps.semver.outputs.version }}
+        run: |
+          dotnet restore documentation-exporter.slnx
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          dotnet test documentation-exporter.slnx --configuration Release --no-build --verbosity minimal
+
+      - name: Verify MSBuild / MinVer resolved version matches release version
+        if: steps.semver.outputs.should_release == 'true'
+        shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ steps.semver.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $resolvedVersion = (dotnet msbuild src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -target:MinVer -getProperty:Version -p:Configuration=Release).Trim()
+          $expectedBase = ('${{ steps.semver.outputs.version }}' -split '\+', 2)[0]
+          $resolvedBase = ($resolvedVersion -split '\+', 2)[0]
+
+          Write-Host "Planned SemVer  : ${{ steps.semver.outputs.version }}"
+          Write-Host "MinVer Resolved : $resolvedVersion"
+
+          if ($resolvedBase -ne $expectedBase) {
+            throw "Resolved MinVer version '$resolvedVersion' does not match expected release version '$expectedBase'."
+          }
+
+  package:
+    name: Package CLI (${{ matrix.rid }})
+    needs: verify
+    if: needs.verify.outputs.should_release == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            os: ubuntu-latest
+            archive: tar.gz
+          - rid: win-x64
+            os: windows-latest
+            archive: zip
+          - rid: osx-arm64
+            os: macos-latest
+            archive: tar.gz
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build portable solution & publish CLI (${{ matrix.rid }})
+        shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ needs.verify.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore documentation-exporter.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # Build portable AnyCPU plugins so CopyBuiltInPluginsToPublish stages build/bin/Documentation.Exporter.Plugins.*/release/
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $stageDir = 'release-stage/${{ matrix.rid }}'
+          dotnet publish src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj `
+            --configuration Release `
+            --runtime '${{ matrix.rid }}' `
+            --self-contained false `
+            --output $stageDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $pluginsDir = Join-Path $stageDir 'plugins'
+          $expectedPluginDlls = @(
+            (Join-Path $pluginsDir 'Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll'),
+            (Join-Path $pluginsDir 'Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll')
+          )
+          foreach ($pluginDll in $expectedPluginDlls) {
+            if (-not (Test-Path $pluginDll)) {
+              throw "Expected staged plugin assembly was not found: $pluginDll"
+            }
+          }
+
+          $duplicateAbstractions = Get-ChildItem -Path $pluginsDir -Filter 'Documentation.Exporter.Abstractions.dll' -Recurse
+          if ($duplicateAbstractions) {
+            throw "Plugin staging must not duplicate Documentation.Exporter.Abstractions.dll inside $pluginsDir."
+          }
+
+      - name: Archive release package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = '${{ needs.verify.outputs.version }}'
+          $rid = '${{ matrix.rid }}'
+          $archiveType = '${{ matrix.archive }}'
+          $stageDir = "release-stage/$rid"
+
+          New-Item -ItemType Directory -Path 'release-assets' -Force | Out-Null
+          $archiveBase = "release-assets/documentation-exporter-v$version-$rid"
+
+          if ($archiveType -eq 'zip') {
+            Compress-Archive -Path "$stageDir/*" -DestinationPath "$archiveBase.zip" -Force
+          } else {
+            tar -czf "$archiveBase.tar.gz" -C $stageDir .
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Upload packaged CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-asset-${{ matrix.rid }}
+          path: release-assets/
+          retention-days: 7
+
+  pack-nuget:
+    name: Pack NuGet Tool & Abstractions
+    needs: verify
+    if: needs.verify.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build solution & pack NuGet packages
+        shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ needs.verify.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          dotnet restore documentation-exporter.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $nupkgsDir = 'nupkgs'
+          New-Item -ItemType Directory -Path $nupkgsDir -Force | Out-Null
+
+          dotnet pack src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet pack src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $cliPackage = Get-ChildItem -Path $nupkgsDir -Filter 'Documentation.Exporter.Cli.*.nupkg' | Select-Object -First 1
+          if (-not $cliPackage) {
+            throw 'Expected Documentation.Exporter.Cli.*.nupkg was not produced.'
+          }
+
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($cliPackage.FullName)
+          try {
+            $entryNames = $zip.Entries | ForEach-Object { $_.FullName.Replace('\', '/') }
+          }
+          finally {
+            $zip.Dispose()
+          }
+
+          foreach ($expectedEntry in @(
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll',
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll'
+          )) {
+            if ($entryNames -notcontains $expectedEntry) {
+              throw "Missing bundled plugin entry '$expectedEntry' inside $($cliPackage.Name)."
+            }
+          }
+
+          if ($entryNames | Where-Object { $_ -like 'tools/*/plugins/*' -and $_ -like '*Documentation.Exporter.Abstractions.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not duplicate Documentation.Exporter.Abstractions.dll under plugins/."
+          }
+          if ($entryNames | Where-Object { $_ -like '*MinVer.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not contain MinVer.dll."
+          }
+
+          $toolTempDir = Join-Path ([System.IO.Path]::GetTempPath()) "doc-exporter-release-smoke-$([Guid]::NewGuid().ToString('N'))"
+          try {
+            dotnet tool install `
+              --tool-path $toolTempDir `
+              --source $nupkgsDir `
+              Documentation.Exporter.Cli `
+              --version '${{ needs.verify.outputs.version }}'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            $toolVersion = (& (Join-Path $toolTempDir 'doc-exporter') --version | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Write-Host "Smoke-tested doc-exporter tool version: $toolVersion"
+          }
+          finally {
+            if (Test-Path $toolTempDir) {
+              Remove-Item -Path $toolTempDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Upload NuGet package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-nupkgs
+          path: nupkgs/
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs:
+      - verify
+      - package
+      - pack-nuget
+    if: needs.verify.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-asset-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Download NuGet packages
+        uses: actions/download-artifact@v4
+        with:
+          name: release-nupkgs
+          path: release-assets
+
+      - name: Generate SHA-256 checksums
+        working-directory: release-assets
+        run: |
+          sha256sum documentation-exporter-* Documentation.Exporter.* > checksums.sha256
+          cat checksums.sha256
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          flags=(
+            "${{ needs.verify.outputs.tag }}"
+            release-assets/*
+            --repo "${{ github.repository }}"
+            --target "${{ github.sha }}"
+            --title "${{ needs.verify.outputs.tag }}"
+            --generate-notes
+          )
+          if [ "${{ needs.verify.outputs.is_prerelease }}" = "true" ]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "${flags[@]}"
+
+  publish-nuget:
+    name: Publish to NuGet.org
+    needs:
+      - verify
+      - pack-nuget
+      - release
+    if: needs.verify.outputs.should_release == 'true' && vars.NUGET_USER != ''
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download NuGet packages
+        uses: actions/download-artifact@v4
+        with:
+          name: release-nupkgs
+          path: nupkgs
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Authenticate with NuGet.org Trusted Publishing (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push packages to NuGet.org
+        run: |
+          for pkg in nupkgs/*.nupkg; do
+            echo "Pushing $pkg..."
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+  build-docs:
+    name: Build Documentation Website
+    needs:
+      - verify
+      - release
+    if: needs.verify.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs Material
+        run: |
+          python -m pip install --upgrade pip
+          pip install "mkdocs-material>=9.6,<10"
+
+      - name: Build solution & generate live API Reference
+        shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ needs.verify.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore documentation-exporter.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & ./build/bin/Documentation.Exporter.Cli/release/Documentation.Exporter.Cli solution `
+            --solution documentation-exporter.slnx `
+            --configuration Release `
+            --exclude '*.Tests' '*.Demo*' `
+            --diagram-format Mermaid `
+            --output docs/api `
+            --nav-file mkdocs.yml `
+            --nav-entry-point 'API Reference' `
+            --nav-url-prefix api `
+            --clean `
+            --strict `
+            --log-level Information
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build static MkDocs website
+        env:
+          DOCS_GIT_REF: ${{ needs.verify.outputs.tag }}
+        run: mkdocs build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy-docs:
+    name: Deploy Documentation Website
+    needs:
+      - verify
+      - build-docs
+    if: needs.verify.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

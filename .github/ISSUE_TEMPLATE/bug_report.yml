@@ -1,0 +1,60 @@
+name: Bug Report
+description: Report a bug in Documentation.Exporter CLI, Core engine, plugins, or generated Markdown output.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for reporting an issue! Please verify it against the latest release and check the [User Guide](https://github.com/trodent83/documentation-exporter/blob/main/docs/user/index.md) before submitting.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Clear description of the bug or unexpected output.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: CLI Mode / Component
+      options:
+        - solution subcommand
+        - assembly subcommand
+        - config subcommand (doc-exporter.json)
+        - Core Library / DI Embedding
+        - Built-in Plugin (Diagrams / Navigation.MkDocs) or Custom Plugin
+        - Docker Image
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, .NET SDK version (`dotnet --version`), and CLI version (`Documentation.Exporter.Cli --version`).
+      placeholder: |
+        - OS: Windows 11 / Ubuntu 24.04
+        - .NET SDK: 11.0.100
+        - CLI Version: 0.1.0-alpha.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproduction (CLI Command, C# Snippet, or XML Doc)
+      description: Include the exact command or minimal C# / XML comment sample that triggers the issue (no sensitive paths or secrets).
+      render: powershell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: Expected vs. Actual Behavior (Exit Code / Logs / Markdown)
+      description: Paste any relevant console logs, exit code (`0`, `1`, `2`), or generated Markdown snippet.
+    validations:
+      required: true

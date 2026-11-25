@@ -1,0 +1,36 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - duplicate
+      - invalid
+      - wontfix
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking-change
+        - breaking
+    - title: Features & Enhancements
+      labels:
+        - feature
+        - enhancement
+    - title: Bug Fixes
+      labels:
+        - bug
+        - fix
+    - title: Plugins & Extensibility
+      labels:
+        - plugin
+        - plugins
+    - title: Documentation
+      labels:
+        - documentation
+        - docs
+    - title: CI, Build, & Dependencies
+      labels:
+        - ci
+        - build
+        - dependencies
+    - title: Other Changes
+      labels:
+        - "*"

@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="IndexPageTitle" xml:space="preserve">
+    <value>API Reference Documentation</value>
+  </data>
+  <data name="IndexWelcomeMessage" xml:space="preserve">
+    <value>Welcome to the API reference documentation.</value>
+  </data>
+  <data name="NamespaceLabel" xml:space="preserve">
+    <value>Namespace</value>
+  </data>
+  <data name="AssemblyLabel" xml:space="preserve">
+    <value>Assembly</value>
+  </data>
+  <data name="TableTypeHeader" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="TableCategoryHeader" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="TableDescriptionHeader" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="TableNameHeader" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="TableExceptionHeader" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="TableConditionHeader" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="InheritanceHierarchyHeading" xml:space="preserve">
+    <value>Inheritance Hierarchy</value>
+  </data>
+  <data name="ImplementedInterfacesHeading" xml:space="preserve">
+    <value>Implemented Interfaces</value>
+  </data>
+  <data name="ConstructorsHeading" xml:space="preserve">
+    <value>Constructors</value>
+  </data>
+  <data name="PropertiesHeading" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="MethodsHeading" xml:space="preserve">
+    <value>Methods</value>
+  </data>
+  <data name="FieldsHeading" xml:space="preserve">
+    <value>Fields</value>
+  </data>
+  <data name="EventsHeading" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="ParametersHeading" xml:space="preserve">
+    <value>Parameters</value>
+  </data>
+  <data name="ReturnsHeading" xml:space="preserve">
+    <value>Returns</value>
+  </data>
+  <data name="ExceptionsHeading" xml:space="preserve">
+    <value>Exceptions</value>
+  </data>
+  <data name="ExamplesHeading" xml:space="preserve">
+    <value>Examples</value>
+  </data>
+  <data name="RemarksHeading" xml:space="preserve">
+    <value>Remarks</value>
+  </data>
+  <data name="SeeAlsoHeading" xml:space="preserve">
+    <value>See Also</value>
+  </data>
+  <data name="TableAccessHeader" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="TableConstructorHeader" xml:space="preserve">
+    <value>Constructor</value>
+  </data>
+  <data name="TableAbstractHeader" xml:space="preserve">
+    <value>Abstract</value>
+  </data>
+  <data name="TableSealedHeader" xml:space="preserve">
+    <value>Sealed</value>
+  </data>
+  <data name="TableStaticHeader" xml:space="preserve">
+    <value>Static</value>
+  </data>
+  <data name="TableGenericHeader" xml:space="preserve">
+    <value>Generic</value>
+  </data>
+  <data name="BooleanYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="BooleanNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="TableVisibilityHeader" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="TableReturnTypeHeader" xml:space="preserve">
+    <value>Return Type</value>
+  </data>
+  <data name="DeclaringTypeLabel" xml:space="preserve">
+    <value>Declaring Type</value>
+  </data>
+  <data name="TypeParametersHeading" xml:space="preserve">
+    <value>Type Parameters</value>
+  </data>
+  <data name="TableConstraintsHeader" xml:space="preserve">
+    <value>Constraints</value>
+  </data>
+  <data name="NoConstraintsLabel" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="PrimaryConstructorLabel" xml:space="preserve">
+    <value>Primary Constructor</value>
+  </data>
+  <data name="ObsoleteWarningTitle" xml:space="preserve">
+    <value>Obsolete</value>
+  </data>
+  <data name="ObsoleteDefaultMessage" xml:space="preserve">
+    <value>This API is obsolete and should no longer be used.</value>
+  </data>
+  <data name="AsyncHeaderLabel" xml:space="preserve">
+    <value>Async</value>
+  </data>
+  <data name="AsyncCancellationBadge" xml:space="preserve">
+    <value>Async Cancellation</value>
+  </data>
+  <data name="EnumeratorCancellationBadge" xml:space="preserve">
+    <value>EnumeratorCancellation</value>
+  </data>
+  <data name="TableModifiersHeader" xml:space="preserve">
+    <value>Modifiers</value>
+  </data>
+  <data name="TableDefaultHeader" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="OptionalParameterBadge" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="NullableParameterBadge" xml:space="preserve">
+    <value>Nullable</value>
+  </data>
+  <data name="EnumBaseTypeHeader" xml:space="preserve">
+    <value>Base Type</value>
+  </data>
+  <data name="ValuesHeading" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="TableValueHeader" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DerivedTypesHeading" xml:space="preserve">
+    <value>Derived Types</value>
+  </data>
+  <data name="KnownImplementationsHeading" xml:space="preserve">
+    <value>Known Implementations</value>
+  </data>
+  <data name="ExtensionMethodsHeading" xml:space="preserve">
+    <value>Extension Methods</value>
+  </data>
+  <data name="TypeDiagramHeading" xml:space="preserve">
+    <value>Type Diagram</value>
+  </data>
+  <data name="AttributesHeaderLabel" xml:space="preserve">
+    <value>Attributes</value>
+  </data>
+  <data name="ArchitectureDiagramHeading" xml:space="preserve">
+    <value>Architecture Diagram</value>
+  </data>
+  <data name="NestedTypesHeading" xml:space="preserve">
+    <value>Nested Types</value>
+  </data>
+  <data name="AssemblyReferencesHeading" xml:space="preserve">
+    <value>Assembly References</value>
+  </data>
+  <data name="TableReferenceHeader" xml:space="preserve">
+    <value>Reference</value>
+  </data>
+  <data name="TableKindHeader" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="TableVersionHeader" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="TableVersionLinkingHeader" xml:space="preserve">
+    <value>Version Linking</value>
+  </data>
+  <data name="TableStrongNamedHeader" xml:space="preserve">
+    <value>Strong-Named</value>
+  </data>
+  <data name="ReferenceKindProject" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="ReferenceKindPackage" xml:space="preserve">
+    <value>Package</value>
+  </data>
+  <data name="ReferenceKindAssembly" xml:space="preserve">
+    <value>Assembly</value>
+  </data>
+  <data name="ReferenceKindFramework" xml:space="preserve">
+    <value>Framework</value>
+  </data>
+  <data name="VersionLinkingCompiled" xml:space="preserve">
+    <value>Compiled</value>
+  </data>
+  <data name="VersionLinkingProjectLinked" xml:space="preserve">
+    <value>Linked (Project)</value>
+  </data>
+  <data name="VersionLinkingFixed" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+  <data name="VersionLinkingMinimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="VersionLinkingRange" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="VersionLinkingFloating" xml:space="preserve">
+    <value>Floating</value>
+  </data>
+  <data name="VersionLinkingFramework" xml:space="preserve">
+    <value>Framework</value>
+  </data>
+  <data name="AssemblyDependencyTreeHeading" xml:space="preserve">
+    <value>Assembly Dependency Tree</value>
+  </data>
+  <data name="AssemblyDependencyTreeLegend" xml:space="preserve">
+    <value>Legend: solid green link = strong-named assembly; dashed gray link = unsigned assembly.</value>
+  </data>
+  <data name="ExtensionPropertiesHeading" xml:space="preserve">
+    <value>Extension Properties</value>
+  </data>
+  <data name="TableRecordHeader" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="TableReadOnlyHeader" xml:space="preserve">
+    <value>ReadOnly</value>
+  </data>
+  <data name="TableRefStructHeader" xml:space="preserve">
+    <value>Ref Struct</value>
+  </data>
+  <data name="ExperimentalWarningTitle" xml:space="preserve">
+    <value>Experimental</value>
+  </data>
+  <data name="ExperimentalDefaultMessage" xml:space="preserve">
+    <value>This API is experimental and subject to change or removal in future updates.</value>
+  </data>
+  <data name="ScopedModifierBadge" xml:space="preserve">
+    <value>scoped</value>
+  </data>
+  <data name="TableTermHeader" xml:space="preserve">
+    <value>Term</value>
+  </data>
+  <data name="QualityReportTitle" xml:space="preserve">
+    <value>Documentation Quality Report</value>
+  </data>
+</root>

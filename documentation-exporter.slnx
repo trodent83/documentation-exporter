@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj" />
+    <Project Path="src/Documentation.Exporter.Core/Documentation.Exporter.Core.csproj" />
+    <Project Path="src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj" />
+    <Project Path="src/Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.csproj" />
+    <Project Path="src/Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Documentation.Exporter.Core.Tests/Documentation.Exporter.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/demo/">
+    <Project Path="demo/Documentation.Exporter.DemoLibrary/Documentation.Exporter.DemoLibrary.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,10 @@
+site_name: Contoso Settlement Platform Documentation
+nav:
+  - Home: home.md
+  - Architecture Guide:
+      - System Overview: architecture/overview.md
+      - Security & Compliance: architecture/security.md
+  - Developer Portal:
+      - Getting Started: developer/getting-started.md
+      - API Reference:
+  - Release Notes: changelog.md
