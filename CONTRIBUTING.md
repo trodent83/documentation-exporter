@@ -56,7 +56,11 @@ Every pull request must comply with [`.agents/AGENTS.md`](.agents/AGENTS.md) and
    - CLI publishing and `plugins/` staging without duplicating `Documentation.Exporter.Abstractions.dll`
    - Full test execution and Cobertura coverage gates
    - End-to-end `--strict` demo export for both Mermaid and PlantUML
-4. Apply the matching PR label so [`.github/release.yml`](.github/release.yml) categorizes your change cleanly in generated release notes (`breaking-change`, `feature`, `enhancement`, `bug`, `plugin`, `documentation`, `ci`, `build`, `dependencies`).
+4. Apply the matching PR label so [`.github/release.yml`](.github/release.yml) categorizes your change cleanly and [`.github/workflows/release.yml`](.github/workflows/release.yml) computes the right automatic SemVer bump when merged into `main`:
+   - `breaking-change` / `breaking` → **major** bump
+   - `feature` / `enhancement` → **minor** bump
+   - `bug`, `plugin`, `documentation`, `ci`, `build`, `dependencies` (or unlabeled) → **patch** bump
+   - `skip-release` / `no-release` (or `[skip release]` in the commit message) → skips cutting a release on merge to `main`
 
 ---
 

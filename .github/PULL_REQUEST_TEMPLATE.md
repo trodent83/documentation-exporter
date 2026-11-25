@@ -4,14 +4,15 @@
 
 Closes #
 
-## Change Type (Aligns with `.github/release.yml` Labels)
+## Change Type (Aligns with `.github/release.yml` Labels & Auto-SemVer Bump on `main`)
 
-- [ ] `feature` / `enhancement`: New capability or user/developer enhancement
-- [ ] `bug`: Bug fix
-- [ ] `plugin`: Plugin SPI, loader, or built-in plugin change
-- [ ] `documentation`: Documentation-only update
-- [ ] `ci` / `build` / `dependencies`: Build system, workflows, Docker, or dependency update
-- [ ] `breaking-change`: Breaking change to CLI flags, JSON schema, or `Abstractions` contracts
+- [ ] `feature` / `enhancement`: New capability or enhancement *(auto **minor** bump)*
+- [ ] `bug`: Bug fix *(auto **patch** bump)*
+- [ ] `plugin`: Plugin SPI, loader, or built-in plugin change *(auto **patch** bump)*
+- [ ] `documentation`: Documentation-only update *(auto **patch** bump, or add `skip-release` to skip releasing)*
+- [ ] `ci` / `build` / `dependencies`: Build system, workflows, Docker, or dependency update *(auto **patch** bump, or add `skip-release`)*
+- [ ] `breaking-change`: Breaking change to CLI flags, JSON schema, or `Abstractions` contracts *(auto **major** bump)*
+- [ ] `skip-release`: Internal/docs/chore merge that should not cut a release on merge to `main`
 
 ## Verification Checklist
 

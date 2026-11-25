@@ -2,11 +2,34 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semantic version increment when version is omitted
+        required: true
+        type: choice
+        default: auto
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      version:
+        description: Optional explicit SemVer version override (e.g. 1.0.0 or 1.0.0-rc.1)
+        required: false
+        type: string
 
 permissions:
   contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-pipeline
+  cancel-in-progress: false
 
 env:
   DOTNET_VERSION: '11.0.x'
@@ -15,10 +38,12 @@ env:
 
 jobs:
   verify:
-    name: Verify Tagged Release
+    name: Verify Release
     runs-on: ubuntu-latest
     outputs:
+      should_release: ${{ steps.semver.outputs.should_release }}
       version: ${{ steps.semver.outputs.version }}
+      tag: ${{ steps.semver.outputs.tag }}
       is_prerelease: ${{ steps.semver.outputs.is_prerelease }}
 
     steps:
@@ -27,53 +52,198 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate SemVer 2.0 tag
+      - name: Resolve release version
         id: semver
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $tag = '${{ github.ref_name }}'
           $semverPattern = '^v(?<core>(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?<pre>-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?<meta>\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$'
-          if ($tag -notmatch $semverPattern) {
-            throw "Tag '$tag' is not a valid SemVer 2.0 tag prefixed with 'v' (expected e.g. v1.0.0 or v1.2.0-rc.1)."
+
+          function Write-ReleaseOutputs {
+            param(
+              [string]$ShouldRelease,
+              [string]$Version = '',
+              [string]$Tag = '',
+              [string]$IsPrerelease = 'false',
+              [string]$Reason = ''
+            )
+            "should_release=$ShouldRelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "version=$Version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "tag=$Tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "is_prerelease=$IsPrerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+            if ($env:GITHUB_STEP_SUMMARY) {
+              if ($ShouldRelease -eq 'true') {
+                "### Release Plan: ``$Tag`` (version ``$Version``, prerelease: ``$IsPrerelease``)`n`n$Reason" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              } else {
+                "### Release Skipped`n`n$Reason" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              }
+            }
           }
 
-          $version = $tag.Substring(1)
-          $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+          $eventName = '${{ github.event_name }}'
+          $refType = '${{ github.ref_type }}'
+          $refName = '${{ github.ref_name }}'
+          $explicitInputVersion = '${{ inputs.version }}'.Trim()
+          $requestedBump = '${{ inputs.bump }}'.Trim().ToLowerInvariant()
+          if ([string]::IsNullOrWhiteSpace($requestedBump)) { $requestedBump = 'auto' }
 
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "is_prerelease=$isPrerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          Write-Host "Validated SemVer tag: $tag (version=$version, prerelease=$isPrerelease)"
+          # 1. Manual Git tag push (v*.*.*)
+          if ($eventName -eq 'push' -and $refType -eq 'tag') {
+            if ($refName -notmatch $semverPattern) {
+              throw "Tag '$refName' is not a valid SemVer 2.0 tag prefixed with 'v' (expected e.g. v1.0.0 or v1.2.0-rc.1)."
+            }
+            $version = $refName.Substring(1)
+            $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+            Write-ReleaseOutputs -ShouldRelease 'true' -Version $version -Tag $refName -IsPrerelease $isPrerelease -Reason 'Triggered by explicit SemVer tag push.'
+            exit 0
+          }
+
+          # 2. Manual workflow_dispatch with explicit version input
+          if ($eventName -eq 'workflow_dispatch' -and -not [string]::IsNullOrWhiteSpace($explicitInputVersion)) {
+            $normalizedTag = if ($explicitInputVersion.StartsWith('v', [System.StringComparison]::OrdinalIgnoreCase)) {
+              'v' + $explicitInputVersion.Substring(1)
+            } else {
+              'v' + $explicitInputVersion
+            }
+            if ($normalizedTag -notmatch $semverPattern) {
+              throw "Input version '$explicitInputVersion' is not a valid SemVer 2.0 version (expected e.g. 1.0.0 or 1.2.0-rc.1)."
+            }
+            $existingTag = (git tag --list $normalizedTag | Out-String).Trim()
+            if (-not [string]::IsNullOrWhiteSpace($existingTag)) {
+              throw "Git tag '$normalizedTag' already exists."
+            }
+            $version = $normalizedTag.Substring(1)
+            $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+            Write-ReleaseOutputs -ShouldRelease 'true' -Version $version -Tag $normalizedTag -IsPrerelease $isPrerelease -Reason 'Triggered manually via workflow_dispatch with explicit version.'
+            exit 0
+          }
+
+          # 3. Automatic merge/push to main (or workflow_dispatch bump)
+          $prLabels = @()
+          if ($eventName -eq 'push') {
+            $existingHeadTags = (git tag --points-at HEAD 'v[0-9]*.[0-9]*.[0-9]*' | Out-String).Trim()
+            if (-not [string]::IsNullOrWhiteSpace($existingHeadTags)) {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason "HEAD already has release tag(s): $existingHeadTags."
+              exit 0
+            }
+
+            $commitMessage = (git log -1 --pretty=%B | Out-String)
+            if ($commitMessage -imatch '\[(skip|no)\s+release\]') {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason 'Commit message contains [skip release] / [no release].'
+              exit 0
+            }
+
+            try {
+              $rawLabels = & gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '[.[].labels[].name]' 2>$null
+              if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($rawLabels)) {
+                $parsedLabels = $rawLabels | ConvertFrom-Json
+                if ($parsedLabels) {
+                  $prLabels = @($parsedLabels | ForEach-Object { $_.ToString().Trim().ToLowerInvariant() })
+                }
+              }
+            }
+            catch {
+              $prLabels = @()
+            }
+            $global:LASTEXITCODE = 0
+
+            if ($prLabels -contains 'skip-release' -or $prLabels -contains 'no-release') {
+              Write-ReleaseOutputs -ShouldRelease 'false' -Reason 'Merged PR carries the skip-release / no-release label.'
+              exit 0
+            }
+          }
+          else {
+            $commitMessage = (git log -1 --pretty=%B | Out-String)
+          }
+
+          # Determine SemVer bump level
+          $bump = $requestedBump
+          if ($bump -eq 'auto') {
+            if (($prLabels -contains 'breaking-change') -or
+                ($prLabels -contains 'breaking') -or
+                ($commitMessage -match 'BREAKING[ -]CHANGE') -or
+                ($commitMessage -match '(?m)^[a-z]+(\([^)]*\))?!:')) {
+              $bump = 'major'
+            }
+            elseif (($prLabels -contains 'feature') -or
+                    ($prLabels -contains 'enhancement') -or
+                    ($commitMessage -match '(?m)^feat(\([^)]*\))?:')) {
+              $bump = 'minor'
+            }
+            else {
+              $bump = 'patch'
+            }
+          }
+
+          # Compute next stable SemVer from existing vX.Y.Z tags
+          $stableTags = @(git tag --list 'v[0-9]*.[0-9]*.[0-9]*') |
+            Where-Object { $_ -match '^v(?<maj>0|[1-9]\d*)\.(?<min>0|[1-9]\d*)\.(?<pat>0|[1-9]\d*)$' } |
+            ForEach-Object {
+              [void]($_ -match '^v(?<maj>0|[1-9]\d*)\.(?<min>0|[1-9]\d*)\.(?<pat>0|[1-9]\d*)$')
+              [pscustomobject]@{
+                Major = [int]$Matches['maj']
+                Minor = [int]$Matches['min']
+                Patch = [int]$Matches['pat']
+              }
+            } |
+            Sort-Object -Property Major, Minor, Patch -Descending
+
+          if ($stableTags.Count -eq 0) {
+            $nextVersion = if ($bump -eq 'major') { '1.0.0' } else { '0.1.0' }
+          }
+          else {
+            $latest = $stableTags[0]
+            switch ($bump) {
+              'major' { $nextVersion = "$($latest.Major + 1).0.0" }
+              'minor' { $nextVersion = "$($latest.Major).$($latest.Minor + 1).0" }
+              default { $nextVersion = "$($latest.Major).$($latest.Minor).$($latest.Patch + 1)" }
+            }
+          }
+
+          $nextTag = "v$nextVersion"
+          $labelText = if ($prLabels.Count -gt 0) { $prLabels -join ', ' } else { 'none' }
+          Write-ReleaseOutputs -ShouldRelease 'true' -Version $nextVersion -Tag $nextTag -IsPrerelease 'false' -Reason "Automatic **$bump** bump (PR labels: ``$labelText``)."
 
       - name: Setup .NET SDK
+        if: steps.semver.outputs.should_release == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore, build, and test (Release)
+        if: steps.semver.outputs.should_release == 'true'
+        env:
+          MINVERVERSIONOVERRIDE: ${{ steps.semver.outputs.version }}
         run: |
           dotnet restore documentation-exporter.slnx
           dotnet build documentation-exporter.slnx --configuration Release --no-restore
           dotnet test documentation-exporter.slnx --configuration Release --no-build --verbosity minimal
 
-      - name: Verify MSBuild / MinVer resolved version matches tag
+      - name: Verify MSBuild / MinVer resolved version matches release version
+        if: steps.semver.outputs.should_release == 'true'
         shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ steps.semver.outputs.version }}
         run: |
           $ErrorActionPreference = 'Stop'
           $resolvedVersion = (dotnet msbuild src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -target:MinVer -getProperty:Version -p:Configuration=Release).Trim()
           $expectedBase = ('${{ steps.semver.outputs.version }}' -split '\+', 2)[0]
           $resolvedBase = ($resolvedVersion -split '\+', 2)[0]
 
-          Write-Host "Tagged SemVer   : ${{ steps.semver.outputs.version }}"
+          Write-Host "Planned SemVer  : ${{ steps.semver.outputs.version }}"
           Write-Host "MinVer Resolved : $resolvedVersion"
 
           if ($resolvedBase -ne $expectedBase) {
-            throw "Resolved MinVer version '$resolvedVersion' does not match expected tag version '$expectedBase'."
+            throw "Resolved MinVer version '$resolvedVersion' does not match expected release version '$expectedBase'."
           }
 
   package:
     name: Package CLI (${{ matrix.rid }})
     needs: verify
+    if: needs.verify.outputs.should_release == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -102,6 +272,8 @@ jobs:
 
       - name: Build portable solution & publish CLI (${{ matrix.rid }})
         shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ needs.verify.outputs.version }}
         run: |
           $ErrorActionPreference = 'Stop'
           dotnet restore documentation-exporter.slnx
@@ -164,6 +336,7 @@ jobs:
   pack-nuget:
     name: Pack NuGet Tool & Abstractions
     needs: verify
+    if: needs.verify.outputs.should_release == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -179,6 +352,8 @@ jobs:
 
       - name: Build solution & pack NuGet packages
         shell: pwsh
+        env:
+          MINVERVERSIONOVERRIDE: ${{ needs.verify.outputs.version }}
         run: |
           $ErrorActionPreference = 'Stop'
           Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -259,6 +434,7 @@ jobs:
       - verify
       - package
       - pack-nuget
+    if: needs.verify.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -289,10 +465,11 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           flags=(
-            "${{ github.ref_name }}"
+            "${{ needs.verify.outputs.tag }}"
             release-assets/*
             --repo "${{ github.repository }}"
-            --title "${{ github.ref_name }}"
+            --target "${{ github.sha }}"
+            --title "${{ needs.verify.outputs.tag }}"
             --generate-notes
           )
           if [ "${{ needs.verify.outputs.is_prerelease }}" = "true" ]; then
@@ -305,7 +482,8 @@ jobs:
     needs:
       - verify
       - pack-nuget
-    if: ${{ vars.NUGET_USER != '' }}
+      - release
+    if: needs.verify.outputs.should_release == 'true' && vars.NUGET_USER != ''
     runs-on: ubuntu-latest
     permissions:
       id-token: write

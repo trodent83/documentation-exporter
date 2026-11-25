@@ -1,6 +1,6 @@
 # Scripts, Build System, & Containerization
 
-This reference documents every manual PowerShell automation script in [`scripts/manual/`](../../scripts/manual), the GitHub Actions gated check-in ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) and tag-triggered release ([`.github/workflows/release.yml`](../../.github/workflows/release.yml)) workflows, the multi-stage Docker container setup ([`Dockerfile`](../../Dockerfile)), and MSBuild / NuGet / MinVer workspace configuration ([`Directory.Build.props`](../../Directory.Build.props), [`src/Directory.Build.props`](../../src/Directory.Build.props), [`Directory.Packages.props`](../../Directory.Packages.props)).
+This reference documents every manual PowerShell automation script in [`scripts/manual/`](../../scripts/manual), the GitHub Actions gated check-in ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) and automated release ([`.github/workflows/release.yml`](../../.github/workflows/release.yml)) workflows, the multi-stage Docker container setup ([`Dockerfile`](../../Dockerfile)), and MSBuild / NuGet / MinVer workspace configuration ([`Directory.Build.props`](../../Directory.Build.props), [`src/Directory.Build.props`](../../src/Directory.Build.props), [`Directory.Packages.props`](../../Directory.Packages.props)).
 
 ---
 
@@ -210,14 +210,30 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    Tag["git tag v1.0.0 & push"] --> Verify["release.yml: Verify Tag, Build, Test, & MinVer Match"]
-    Verify --> PkgLinux["package (linux-x64 .tar.gz)"]
-    Verify --> PkgWin["package (win-x64 .zip)"]
-    Verify --> PkgMac["package (osx-arm64 .tar.gz)"]
-    PkgLinux --> Release["Publish GitHub Release + checksums.sha256"]
+    Merge["Merge to main (or v*.*.* tag / workflow_dispatch)"] --> Bump["verify: Resolve SemVer Bump & MINVERVERSIONOVERRIDE"]
+    Bump -->|"skip-release / [skip release]"| Skip["Skip Release Cleanly"]
+    Bump -->|"Tests & Version Match"| PkgLinux["package (linux-x64 .tar.gz)"]
+    Bump -->|"Tests & Version Match"| PkgWin["package (win-x64 .zip)"]
+    Bump -->|"Tests & Version Match"| PkgMac["package (osx-arm64 .tar.gz)"]
+    Bump -->|"Tests & Version Match"| PackNuget["pack-nuget (.NET Tool + Abstractions)"]
+    PkgLinux --> Release["release: Create vX.Y.Z Tag & GitHub Release + checksums.sha256"]
     PkgWin --> Release
     PkgMac --> Release
+    PackNuget --> Release
+    Release --> NuGet["publish-nuget: NuGet/login@v1 -> NuGet.org"]
 ```
+
+### Automatic SemVer Bump & Skip Rules on Merge to `main`
+
+`release.yml` queues merges sequentially (`concurrency: group: release-pipeline, cancel-in-progress: false`) and resolves the next `vX.Y.Z` tag from PR labels, Conventional Commit prefixes, or `workflow_dispatch` inputs before passing `MINVERVERSIONOVERRIDE` to all build, publish, and pack jobs:
+
+| Signal (PR Label or Commit Message) | Resolved Bump / Action | Notes |
+| :--- | :--- | :--- |
+| `skip-release` / `no-release` label or `[skip release]` in commit | **Skip release** | Exits cleanly without tagging or publishing |
+| `breaking-change` / `breaking` label, `BREAKING CHANGE`, or `type!:` | **Major** (`(X+1).0.0`) | Starts at `1.0.0` if no prior stable `v*` tag exists |
+| `feature` / `enhancement` label or `feat:` commit prefix | **Minor** (`X.(Y+1).0`) | Starts at `0.1.0` if no prior stable `v*` tag exists |
+| All other merges (`bug`, `plugin`, `documentation`, `ci`, `dependencies`, unlabeled) | **Patch** (`X.Y.(Z+1)`) | Starts at `0.1.0` if no prior stable `v*` tag exists |
+| Explicit `v*.*.*` tag push or `workflow_dispatch` `version` input | **Exact SemVer** | Supports pre-releases (`v1.0.0-rc.1` -> `--prerelease`) |
 
 ### MinVer Configuration (`src/Directory.Build.props`)
 
@@ -243,7 +259,7 @@ git push origin v1.0.0
 docker build --build-arg MINVERVERSIONOVERRIDE=1.0.0 -t documentation-exporter:1.0.0 .
 ```
 
-When a `v*.*.*` tag is pushed (matching `'v[0-9]*.[0-9]*.[0-9]*'` and strictly validated against SemVer 2.0 inside the `verify` job), [`.github/workflows/release.yml`](../../.github/workflows/release.yml) validates the tag against SemVer 2.0, runs the full `Release` build and test suite, verifies the MinVer-stamped CLI version matches the tag, publishes framework-dependent packages with staged `plugins/` for `linux-x64` (`.tar.gz`), `win-x64` (`.zip`), and `osx-arm64` (`.tar.gz`), packs both `Documentation.Exporter.Cli` (`.NET Tool` `doc-exporter` bundling `tools/net11.0/any/plugins/`) and `Documentation.Exporter.Abstractions` (`.nupkg` + `.snupkg`), generates `checksums.sha256`, creates a GitHub Release via `--repo` using `GITHUB_TOKEN` (automatically marking `-alpha` / `-rc` tags as `--prerelease`), and pushes the `.nupkg` packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`).
+When a PR merges into `main` (or when a `v*.*.*` tag is pushed / `workflow_dispatch` is triggered), [`.github/workflows/release.yml`](../../.github/workflows/release.yml) resolves the next SemVer version, builds and tests in `Release` with `MINVERVERSIONOVERRIDE`, publishes framework-dependent packages with staged `plugins/` for `linux-x64` (`.tar.gz`), `win-x64` (`.zip`), and `osx-arm64` (`.tar.gz`), packs both `Documentation.Exporter.Cli` (`.NET Tool` `doc-exporter` bundling `tools/net11.0/any/plugins/`) and `Documentation.Exporter.Abstractions` (`.nupkg` + `.snupkg`), generates `checksums.sha256`, atomically creates the GitHub tag + Release via `--target "${{ github.sha }}"` and `--repo` using `GITHUB_TOKEN` (automatically marking `-alpha` / `-rc` tags as `--prerelease`), and pushes the `.nupkg` packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`).
 
 ### NuGet Packaging & `.NET Tool` (`doc-exporter`)
 
