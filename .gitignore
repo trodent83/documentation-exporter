@@ -5,6 +5,8 @@
 # demo export output folder (.demo-output/), and standard MSBuild fallback directories.
 [Bb]uild/
 .demo-output/
+docs/api/
+site/
 [Bb]in/
 [Oo]bj/
 [Oo]ut/

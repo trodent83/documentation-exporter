@@ -2,7 +2,7 @@
 
 **Documentation.Exporter** is an extensible .NET 11 & C# 1–14 documentation generator, CLI tool, and embeddable library that transforms compiled `.dll` assemblies, compiler XML documentation files (`.xml`), and `.sln`/`.slnx` solutions into Microsoft Learn-style MkDocs Markdown, Mermaid or PlantUML diagrams, assembly reference & transitive dependency graphs, site navigation manifests, and CI quality reports.
 
-> **Quick Links:** [Documentation Portal](docs/index.md) · [Getting Started & Demo Showcase](docs/user/getting-started-and-demo.md) · [CLI & JSON Configuration](docs/user/cli-and-configuration.md) · [Developer Onboarding](docs/developer/onboarding.md) · [Architecture Overview](docs/architectural/index.md) · [License (MIT)](LICENSE)
+> **Quick Links:** [Documentation Website](https://trodent83.github.io/documentation-exporter/) · [Documentation Portal](docs/index.md) · [Getting Started & Demo Showcase](docs/user/getting-started-and-demo.md) · [CLI & JSON Configuration](docs/user/cli-and-configuration.md) · [Developer Onboarding](docs/developer/onboarding.md) · [Architecture Overview](docs/architectural/index.md) · [License (MIT)](LICENSE)
 
 ---
 
@@ -138,7 +138,7 @@ var result = await engine.ExportDocumentationAsync(new ExporterOptions
 
 ## Documentation Portal
 
-This `README.md` serves as the top-level entry point to the repository documentation hosted under **[`docs/index.md`](docs/index.md)**:
+Visit the hosted **[Documentation Website](https://trodent83.github.io/documentation-exporter/)** *(MkDocs Material + auto-generated API Reference, updated on every release)* or browse the Markdown portal directly under **[`docs/index.md`](docs/index.md)**:
 
 | Audience | Entry Point | Focus |
 | :--- | :--- | :--- |
@@ -192,6 +192,7 @@ This `README.md` serves as the top-level entry point to the repository documenta
 | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE) & [`PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | Structured GitHub bug/feature forms and PR verification checklist |
 | [`src/Directory.Build.props`](src/Directory.Build.props) | MinVer SemVer configuration (`v` tag prefix) stamping all shippable `src/` assemblies and `Documentation.Exporter.Cli --version` |
 | [`docs/`](docs/index.md) | Complete three-tier Architecture, Developer, and User documentation portal |
+| [`mkdocs.yml`](mkdocs.yml) & [`scripts/mkdocs_hooks.py`](scripts/mkdocs_hooks.py) | MkDocs Material configuration and build hooks deployed to GitHub Pages on every release |
 | [`Dockerfile`](Dockerfile) & [`Directory.Build.props`](Directory.Build.props) | Multi-stage .NET 11 Linux runtime image and centralized `build/` artifact & analyzer settings |
 
 ---
@@ -215,7 +216,7 @@ powershell -ExecutionPolicy Bypass -File scripts/manual/Run-CodeCoverage.ps1 -Ca
 > [!NOTE]
 > Pull requests and merges targeting `main` are gated by [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (`CI Gate`), which validates Release builds, CLI plugin staging, cross-platform tests (`ubuntu-latest` and `windows-latest`), Cobertura coverage thresholds, and `--strict` demo exports. Configure **`CI Gate`** as a required status check in GitHub Branch Protection / Rulesets on `main` (see [Scripts & Automation](docs/developer/scripts-and-automation.md)).
 >
-> **Semantic Versioning & Automatic Releases:** All `src/` assemblies, the `Documentation.Exporter.Cli` `.NET Tool` (`doc-exporter`), and the `Documentation.Exporter.Abstractions` NuGet library use **MinVer** ([`src/Directory.Build.props`](src/Directory.Build.props)). Every merge into `main` automatically runs [`.github/workflows/release.yml`](.github/workflows/release.yml) to bump the SemVer (`breaking-change` → major, `feature`/`enhancement` → minor, default → patch; skip with `skip-release` label or `[skip release]`), tag `vX.Y.Z`, attach `linux-x64`, `win-x64`, `osx-arm64`, `.nupkg`/`.snupkg`, and `checksums.sha256` to GitHub Releases, and publish both packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`). Manual `v*.*.*` tag pushes and `workflow_dispatch` are also supported.
+> **Semantic Versioning & Automatic Releases:** All `src/` assemblies, the `Documentation.Exporter.Cli` `.NET Tool` (`doc-exporter`), and the `Documentation.Exporter.Abstractions` NuGet library use **MinVer** ([`src/Directory.Build.props`](src/Directory.Build.props)). Every merge into `main` automatically runs [`.github/workflows/release.yml`](.github/workflows/release.yml) to bump the SemVer (`breaking-change` → major, `feature`/`enhancement` → minor, default → patch; skip with `skip-release` label or `[skip release]`), tag `vX.Y.Z`, attach `linux-x64`, `win-x64`, `osx-arm64`, `.nupkg`/`.snupkg`, and `checksums.sha256` to GitHub Releases, publish both packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`), and build + deploy the [Documentation Website](https://trodent83.github.io/documentation-exporter/) (authored `docs/` + live API Reference) to GitHub Pages. Manual `v*.*.*` tag pushes and `workflow_dispatch` are also supported.
 
 ---
 

@@ -38,6 +38,8 @@ scripts/
 # Markdown guides, sample generated outputs, and AI agent rules are not required
 # inside the container build or runtime image.
 docs/
+site/
+mkdocs.yml
 sample_docs_output/
 .agents/
 README.md

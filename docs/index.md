@@ -1,6 +1,6 @@
 # Documentation.Exporter Documentation
 
-> **Repository Entry Point:** [Project Overview, Quick Start, & Capabilities (`README.md`)](../README.md) · [License (MIT)](../LICENSE)
+> **Repository Entry Point:** [Project Overview, Quick Start, & Capabilities (`README.md`)](../README.md) · [Hosted Docs Website](https://trodent83.github.io/documentation-exporter/) · [License (MIT)](../LICENSE)
 
 Welcome to the central documentation portal for **Documentation.Exporter** — a .NET 11 contracts base ([`Documentation.Exporter.Abstractions`](../src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj)), modular core engine ([`Documentation.Exporter.Core`](../src/Documentation.Exporter.Core/Documentation.Exporter.Core.csproj)), dynamic plugins ([`Documentation.Exporter.Plugins.Diagrams`](../src/Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.csproj) and [`Documentation.Exporter.Plugins.Navigation.MkDocs`](../src/Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.csproj)), cross-platform CLI tool ([`Documentation.Exporter.Cli`](../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj)), and Docker-ready generator ([`Dockerfile`](../Dockerfile)) that exports C# XML documentation comments, compiled CLR reflection metadata, NuGet/project reference tables, transitive dependency trees, and extensible single-format diagrams into Microsoft Learn-styled MkDocs Markdown documentation.
 
