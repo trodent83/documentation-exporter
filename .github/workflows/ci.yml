@@ -175,6 +175,7 @@ jobs:
             --configuration Release `
             --no-build `
             --verbosity normal `
+            --logger 'console;verbosity=normal' `
             --logger 'trx;LogFileName=test-results.trx' `
             --results-directory TestResults `
             --collect:'XPlat Code Coverage' `

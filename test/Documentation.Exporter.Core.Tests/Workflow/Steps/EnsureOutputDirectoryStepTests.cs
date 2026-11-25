@@ -65,18 +65,31 @@ public sealed class EnsureOutputDirectoryStepTests
     public async Task ExecuteAsyncWhenCreationFailsShouldReturnFalse()
     {
         // Arrange
-        var step = new EnsureOutputDirectoryStep(new Documentation.Exporter.Core.IO.PhysicalFileSystem());
-        var options = new ExporterOptions
+        var directoryStep = new EnsureOutputDirectoryStep(new Documentation.Exporter.Core.IO.PhysicalFileSystem());
+        var blockingFilePath = Path.Combine(Path.GetTempPath(), $"EnsureDirBlocked_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(blockingFilePath, "blocking-file");
+        var blockedDirectoryPath = Path.Combine(blockingFilePath, "nested-output");
+        var exporterOptions = new ExporterOptions
         {
-            OutputDirectoryPath = "http://invalid*path/with?illegal<characters>"
+            OutputDirectoryPath = blockedDirectoryPath
         };
-        var context = new ExportWorkflowContext(options);
+        var workflowContext = new ExportWorkflowContext(exporterOptions);
 
-        // Act
-        var result = await step.ExecuteAsync(context);
+        try
+        {
+            // Act
+            var executionSucceeded = await directoryStep.ExecuteAsync(workflowContext);
 
-        // Assert
-        _ = result.Should().BeFalse("because directory creation with invalid characters should fail gracefully.");
+            // Assert
+            _ = executionSucceeded.Should().BeFalse("because directory creation beneath an existing file must fail gracefully across Windows and Linux.");
+        }
+        finally
+        {
+            if (File.Exists(blockingFilePath))
+            {
+                File.Delete(blockingFilePath);
+            }
+        }
     }
 
     [Fact]
