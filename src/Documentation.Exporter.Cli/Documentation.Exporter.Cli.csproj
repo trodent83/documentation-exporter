@@ -10,7 +10,17 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <RootNamespace>Documentation.Exporter.Cli</RootNamespace>
     <AssemblyName>Documentation.Exporter.Cli</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>doc-exporter</ToolCommandName>
+    <PackageId>Documentation.Exporter.Cli</PackageId>
+    <Description>Extensible .NET CLI tool (doc-exporter) that exports C# assemblies, solutions, and XML docs into Microsoft Learn-style MkDocs Markdown, Mermaid/PlantUML diagrams, navigation manifests, and CI quality reports.</Description>
+    <PackageTags>documentation;markdown;mkdocs;xmldoc;mermaid;plantuml;csharp;dotnet-tool;cli</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

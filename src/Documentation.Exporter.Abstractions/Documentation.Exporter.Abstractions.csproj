@@ -7,7 +7,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Documentation.Exporter.Abstractions</RootNamespace>
     <AssemblyName>Documentation.Exporter.Abstractions</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Documentation.Exporter.Abstractions</PackageId>
+    <Description>Plugin SPI, immutable domain models, extensible format value objects, and subsystem contracts for building Documentation.Exporter extensions and plugins.</Description>
+    <PackageTags>documentation;markdown;mkdocs;xmldoc;csharp;dotnet;plugin;abstractions</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Documentation.Exporter.Core" />

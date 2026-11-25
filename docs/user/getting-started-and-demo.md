@@ -24,10 +24,17 @@ flowchart LR
 
 ---
 
-## 1. Prerequisites & Building the CLI
+## 1. Prerequisites & Installing or Building the CLI
 
 - Install the **.NET 11 SDK**.
-- Build the CLI executable ([`Documentation.Exporter.Cli.csproj`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj)) into `build/bin/Documentation.Exporter.Cli/`:
+- **Option A — Install as a `.NET Tool` (`doc-exporter`):**
+
+```powershell
+dotnet tool install --global Documentation.Exporter.Cli
+doc-exporter --version
+```
+
+- **Option B — Build from source** ([`Documentation.Exporter.Cli.csproj`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj)) into `build/bin/Documentation.Exporter.Cli/`:
 
 ```powershell
 dotnet build src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -c Release

@@ -115,7 +115,7 @@ Plugins can also register [`INamespaceHandler`](../../../src/Documentation.Expor
 
 ### Creating & Deploying an External Diagram Plugin (e.g., D2)
 
-1. Create a class library referencing only `Documentation.Exporter.Abstractions` (`<Private>false</Private><ExcludeAssets>runtime</ExcludeAssets>`):
+1. Create a class library referencing only `Documentation.Exporter.Abstractions` — either from NuGet (`<PackageReference Include="Documentation.Exporter.Abstractions" ExcludeAssets="runtime" PrivateAssets="all" />`) or via a project reference (`<Private>false</Private><ExcludeAssets>runtime</ExcludeAssets>`):
 
 ```csharp
 using Documentation.Exporter.Abstractions.DependencyInjection;

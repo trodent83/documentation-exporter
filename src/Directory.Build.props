@@ -6,6 +6,15 @@
     <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
     <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
     <MinVerAutoIncrement>patch</MinVerAutoIncrement>
+    <IsPackable>false</IsPackable>
+    <Authors>trodent83</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/trodent83/documentation-exporter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/trodent83/documentation-exporter.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>

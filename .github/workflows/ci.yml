@@ -92,6 +92,77 @@ jobs:
 
           Write-Host 'Verified staged plugins in publish output without duplicate Abstractions contract.'
 
+      - name: Pack NuGet packages & smoke-test doc-exporter tool
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $nupkgsDir = 'build/nupkgs'
+          if (Test-Path $nupkgsDir) {
+            Remove-Item -Path $nupkgsDir -Recurse -Force
+          }
+
+          dotnet pack src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet pack src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $cliPackage = Get-ChildItem -Path $nupkgsDir -Filter 'Documentation.Exporter.Cli.*.nupkg' | Select-Object -First 1
+          if (-not $cliPackage) {
+            throw "Expected Documentation.Exporter.Cli.*.nupkg was not produced in $nupkgsDir."
+          }
+
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($cliPackage.FullName)
+          try {
+            $entryNames = $zip.Entries | ForEach-Object { $_.FullName.Replace('\', '/') }
+          }
+          finally {
+            $zip.Dispose()
+          }
+
+          foreach ($expectedEntry in @(
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll',
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll'
+          )) {
+            if ($entryNames -notcontains $expectedEntry) {
+              throw "Missing bundled plugin entry '$expectedEntry' inside $($cliPackage.Name)."
+            }
+          }
+
+          if ($entryNames | Where-Object { $_ -like 'tools/*/plugins/*' -and $_ -like '*Documentation.Exporter.Abstractions.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not duplicate Documentation.Exporter.Abstractions.dll under plugins/."
+          }
+          if ($entryNames | Where-Object { $_ -like '*MinVer.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not contain MinVer.dll."
+          }
+
+          $toolTempDir = Join-Path ([System.IO.Path]::GetTempPath()) "doc-exporter-smoke-$([Guid]::NewGuid().ToString('N'))"
+          try {
+            dotnet tool install `
+              --tool-path $toolTempDir `
+              --add-source $nupkgsDir `
+              Documentation.Exporter.Cli `
+              --version $env:RESOLVED_VERSION
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            $toolExe = Join-Path $toolTempDir ($(if ($IsWindows) { 'doc-exporter.exe' } else { 'doc-exporter' }))
+            $toolVersion = (& $toolExe --version | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            Write-Host "Installed doc-exporter --version => $toolVersion"
+            $expectedPrefix = ($env:RESOLVED_VERSION -split '\+', 2)[0]
+            if (-not $toolVersion.StartsWith($expectedPrefix, [System.StringComparison]::Ordinal)) {
+              throw "Tool version '$toolVersion' did not start with expected SemVer '$expectedPrefix'."
+            }
+          }
+          finally {
+            if (Test-Path $toolTempDir) {
+              Remove-Item -Path $toolTempDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+
       - name: Run tests and collect Cobertura coverage
         shell: pwsh
         run: |

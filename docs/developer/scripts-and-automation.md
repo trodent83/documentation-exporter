@@ -176,7 +176,7 @@ flowchart LR
 
 | Job | Runner(s) | Checks Executed |
 | :--- | :--- | :--- |
-| **`build-and-test`** | `ubuntu-latest`, `windows-latest` | Full-history checkout (`fetch-depth: 0`) for MinVer, `dotnet restore` & `dotnet build -c Release` (zero warnings/errors), resolved SemVer logging, `dotnet publish` CLI + verification of staged `Plugins.Diagrams` & `Plugins.Navigation.MkDocs` without duplicate `Abstractions.dll`, full `dotnet test` (482 tests) with Coverlet Cobertura coverage (`MIN_LINE_COVERAGE: 90.0%`, `MIN_BRANCH_COVERAGE: 85.0%`), Job Summary reporting, and `TestResults/` artifact upload |
+| **`build-and-test`** | `ubuntu-latest`, `windows-latest` | Full-history checkout (`fetch-depth: 0`) for MinVer, `dotnet restore` & `dotnet build -c Release` (zero warnings/errors), resolved SemVer logging, `dotnet publish` CLI + verification of staged `Plugins.Diagrams` & `Plugins.Navigation.MkDocs` without duplicate `Abstractions.dll`, `dotnet pack` + `doc-exporter` `.NET Tool` ZIP & install smoke test, full `dotnet test` (482 tests) with Coverlet Cobertura coverage (`MIN_LINE_COVERAGE: 90.0%`, `MIN_BRANCH_COVERAGE: 85.0%`), Job Summary reporting, and `TestResults/` artifact upload |
 | **`demo-export-verification`** | `ubuntu-latest` | Builds [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj) in `Release`, runs [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1) with `--strict` for both `Mermaid` and `PlantUml`, verifies `.demo-output/mkdocs.nav.yml`, `architecture.puml`, and `quality-report.json`, and uploads `.demo-output/` |
 | **`ci-gate`** (`CI Gate`) | `ubuntu-latest` | Aggregator job (`if: always()`) that passes **only** when both `build-and-test` (all OS matrix runs) and `demo-export-verification` succeed |
 
@@ -243,7 +243,21 @@ git push origin v1.0.0
 docker build --build-arg MINVERVERSIONOVERRIDE=1.0.0 -t documentation-exporter:1.0.0 .
 ```
 
-When a `v*.*.*` tag is pushed (matching `'v[0-9]*.[0-9]*.[0-9]*'` and strictly validated against SemVer 2.0 inside the `verify` job), [`.github/workflows/release.yml`](../../.github/workflows/release.yml) validates the tag against SemVer 2.0, runs the full `Release` build and test suite, verifies the MinVer-stamped CLI version matches the tag, publishes framework-dependent packages with staged `plugins/` for `linux-x64` (`.tar.gz`), `win-x64` (`.zip`), and `osx-arm64` (`.tar.gz`), generates `checksums.sha256`, and creates a GitHub Release via `--repo` using `GITHUB_TOKEN` (automatically marking `-alpha` / `-rc` tags as `--prerelease`).
+When a `v*.*.*` tag is pushed (matching `'v[0-9]*.[0-9]*.[0-9]*'` and strictly validated against SemVer 2.0 inside the `verify` job), [`.github/workflows/release.yml`](../../.github/workflows/release.yml) validates the tag against SemVer 2.0, runs the full `Release` build and test suite, verifies the MinVer-stamped CLI version matches the tag, publishes framework-dependent packages with staged `plugins/` for `linux-x64` (`.tar.gz`), `win-x64` (`.zip`), and `osx-arm64` (`.tar.gz`), packs both `Documentation.Exporter.Cli` (`.NET Tool` `doc-exporter` bundling `tools/net11.0/any/plugins/`) and `Documentation.Exporter.Abstractions` (`.nupkg` + `.snupkg`), generates `checksums.sha256`, creates a GitHub Release via `--repo` using `GITHUB_TOKEN` (automatically marking `-alpha` / `-rc` tags as `--prerelease`), and pushes the `.nupkg` packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`).
+
+### NuGet Packaging & `.NET Tool` (`doc-exporter`)
+
+| Package | Project | Output & Bundled Assets |
+| :--- | :--- | :--- |
+| **`Documentation.Exporter.Cli`** | [`Documentation.Exporter.Cli.csproj`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj) | `<PackAsTool>true</PackAsTool>` (`<ToolCommandName>doc-exporter</ToolCommandName>`). `CopyBuiltInPluginsToPublish` bundles `Documentation.Exporter.Plugins.Diagrams` and `Documentation.Exporter.Plugins.Navigation.MkDocs` under `tools/net11.0/any/plugins/` without duplicating `Documentation.Exporter.Abstractions.dll` or `MinVer.dll`. |
+| **`Documentation.Exporter.Abstractions`** | [`Documentation.Exporter.Abstractions.csproj`](../../src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj) | Packable library (`.nupkg` + `.snupkg` symbols + XML docs + `README.md`) for third-party plugin authors. |
+
+### NuGet.org Trusted Publishing Setup (OIDC, No Static API Key)
+
+The `publish-nuget` job in [`.github/workflows/release.yml`](../../.github/workflows/release.yml) uses `permissions: id-token: write` and `NuGet/login@v1` (skipping cleanly whenever `vars.NUGET_USER` is unset):
+
+1. On **nuget.org**, go to **Account → Trusted Publishing** and add a policy for repository owner `trodent83`, repository `documentation-exporter`, and workflow file `release.yml`.
+2. In your GitHub repository, open **Settings → Secrets and variables → Actions → Variables** and create **`NUGET_USER`** set to your exact NuGet.org profile username.
 
 ### Categorized Release Notes (`.github/release.yml`)
 

@@ -161,11 +161,104 @@ jobs:
           path: release-assets/
           retention-days: 7
 
+  pack-nuget:
+    name: Pack NuGet Tool & Abstractions
+    needs: verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build solution & pack NuGet packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          dotnet restore documentation-exporter.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $nupkgsDir = 'nupkgs'
+          New-Item -ItemType Directory -Path $nupkgsDir -Force | Out-Null
+
+          dotnet pack src/Documentation.Exporter.Abstractions/Documentation.Exporter.Abstractions.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet pack src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj --configuration Release --no-build --output $nupkgsDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $cliPackage = Get-ChildItem -Path $nupkgsDir -Filter 'Documentation.Exporter.Cli.*.nupkg' | Select-Object -First 1
+          if (-not $cliPackage) {
+            throw 'Expected Documentation.Exporter.Cli.*.nupkg was not produced.'
+          }
+
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($cliPackage.FullName)
+          try {
+            $entryNames = $zip.Entries | ForEach-Object { $_.FullName.Replace('\', '/') }
+          }
+          finally {
+            $zip.Dispose()
+          }
+
+          foreach ($expectedEntry in @(
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll',
+            'tools/net11.0/any/plugins/Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll'
+          )) {
+            if ($entryNames -notcontains $expectedEntry) {
+              throw "Missing bundled plugin entry '$expectedEntry' inside $($cliPackage.Name)."
+            }
+          }
+
+          if ($entryNames | Where-Object { $_ -like 'tools/*/plugins/*' -and $_ -like '*Documentation.Exporter.Abstractions.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not duplicate Documentation.Exporter.Abstractions.dll under plugins/."
+          }
+          if ($entryNames | Where-Object { $_ -like '*MinVer.dll' }) {
+            throw "Tool package $($cliPackage.Name) must not contain MinVer.dll."
+          }
+
+          $toolTempDir = Join-Path ([System.IO.Path]::GetTempPath()) "doc-exporter-release-smoke-$([Guid]::NewGuid().ToString('N'))"
+          try {
+            dotnet tool install `
+              --tool-path $toolTempDir `
+              --add-source $nupkgsDir `
+              Documentation.Exporter.Cli `
+              --version '${{ needs.verify.outputs.version }}'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            $toolVersion = (& (Join-Path $toolTempDir 'doc-exporter') --version | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Write-Host "Smoke-tested doc-exporter tool version: $toolVersion"
+          }
+          finally {
+            if (Test-Path $toolTempDir) {
+              Remove-Item -Path $toolTempDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Upload NuGet package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-nupkgs
+          path: nupkgs/
+          retention-days: 7
+
   release:
     name: Publish GitHub Release
     needs:
       - verify
       - package
+      - pack-nuget
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -178,10 +271,16 @@ jobs:
           path: release-assets
           merge-multiple: true
 
+      - name: Download NuGet packages
+        uses: actions/download-artifact@v4
+        with:
+          name: release-nupkgs
+          path: release-assets
+
       - name: Generate SHA-256 checksums
         working-directory: release-assets
         run: |
-          sha256sum documentation-exporter-* > checksums.sha256
+          sha256sum * > checksums.sha256
           cat checksums.sha256
 
       - name: Create GitHub Release
@@ -200,3 +299,39 @@ jobs:
             flags+=(--prerelease)
           fi
           gh release create "${flags[@]}"
+
+  publish-nuget:
+    name: Publish to NuGet.org
+    needs:
+      - verify
+      - pack-nuget
+    if: ${{ vars.NUGET_USER != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download NuGet packages
+        uses: actions/download-artifact@v4
+        with:
+          name: release-nupkgs
+          path: nupkgs
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Authenticate with NuGet.org Trusted Publishing (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push packages to NuGet.org
+        run: |
+          dotnet nuget push nupkgs/*.nupkg \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

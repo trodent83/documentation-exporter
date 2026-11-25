@@ -41,7 +41,19 @@ flowchart LR
 - **PowerShell 5.1+ or 7+ (`pwsh`)** *(optional, for helper scripts in [`scripts/manual/`](scripts/manual))*
 - **Docker** *(optional, for containerized Linux runs via [`Dockerfile`](Dockerfile))*
 
-### 1. Build the CLI
+### 1. Install as a .NET Tool (`doc-exporter`) or Build from Source
+
+Install globally from NuGet.org (or locally via `dotnet new tool-manifest` + `dotnet tool install`):
+
+```powershell
+# Global install
+dotnet tool install --global Documentation.Exporter.Cli
+
+# Verify CLI & resolved version
+doc-exporter --version
+```
+
+Or build directly from source:
 
 ```powershell
 dotnet build src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -c Release
@@ -70,8 +82,8 @@ powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps
 ### 3. CLI Usage Examples
 
 ```powershell
-# Export an entire .sln / .slnx solution with strict link checking and SARIF report
-.\build\bin\Documentation.Exporter.Cli\release\Documentation.Exporter.Cli.exe solution `
+# Export an entire .sln / .slnx solution with strict link checking and SARIF report (using `doc-exporter` or the compiled binary)
+doc-exporter solution `
   --solution "demo\Documentation.Exporter.Demo.slnx" `
   --configuration Release `
   --exclude "*.Tests" "*.Benchmarks" `
@@ -84,13 +96,13 @@ powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps
   --report-format Sarif
 
 # Export explicit compiled assemblies (sibling .xml files are inferred automatically if --xml is omitted)
-.\build\bin\Documentation.Exporter.Cli\release\Documentation.Exporter.Cli.exe assembly `
+doc-exporter assembly `
   --assembly "path\to\MyContracts.dll" "path\to\MyLibrary.dll" `
   --output "docs/api" `
   --strict
 
 # Export from a checked-in declarative JSON config (paths resolve relative to the JSON file's folder)
-.\build\bin\Documentation.Exporter.Cli\release\Documentation.Exporter.Cli.exe config `
+doc-exporter config `
   --config "demo\doc-exporter.demo.json" `
   --strict
 ```
@@ -203,7 +215,7 @@ powershell -ExecutionPolicy Bypass -File scripts/manual/Run-CodeCoverage.ps1 -Ca
 > [!NOTE]
 > Pull requests and merges targeting `main` are gated by [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (`CI Gate`), which validates Release builds, CLI plugin staging, cross-platform tests (`ubuntu-latest` and `windows-latest`), Cobertura coverage thresholds, and `--strict` demo exports. Configure **`CI Gate`** as a required status check in GitHub Branch Protection / Rulesets on `main` (see [Scripts & Automation](docs/developer/scripts-and-automation.md)).
 >
-> **Semantic Versioning & Releases:** All `src/` assemblies and `Documentation.Exporter.Cli --version` are stamped automatically from Git tags (`v*.*.*`) via **MinVer** ([`src/Directory.Build.props`](src/Directory.Build.props)). Pushing a SemVer tag such as `v1.0.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml) to verify tests and publish `linux-x64`, `win-x64`, and `osx-arm64` archives plus `checksums.sha256` to GitHub Releases.
+> **Semantic Versioning & Releases:** All `src/` assemblies, the `Documentation.Exporter.Cli` `.NET Tool` (`doc-exporter`), and the `Documentation.Exporter.Abstractions` NuGet library are stamped automatically from Git tags (`v*.*.*`) via **MinVer** ([`src/Directory.Build.props`](src/Directory.Build.props)). Pushing a SemVer tag such as `v1.0.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml) to verify tests, attach `linux-x64`, `win-x64`, `osx-arm64`, `.nupkg`/`.snupkg`, and `checksums.sha256` assets to GitHub Releases, and publish both packages to **NuGet.org** via OIDC Trusted Publishing (`NuGet/login@v1`).
 
 ---
 
