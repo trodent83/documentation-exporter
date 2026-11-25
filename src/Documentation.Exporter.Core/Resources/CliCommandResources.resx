@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="RootCommandDescription" xml:space="preserve">
+    <value>C# XML Documentation and Reflection Exporter into MkDocs Markdown</value>
+  </data>
+  <data name="AssemblyOptionDescription" xml:space="preserve">
+    <value>Path to the compiled target assembly file (.dll)</value>
+  </data>
+  <data name="XmlOptionDescription" xml:space="preserve">
+    <value>Path to the compiler-generated XML documentation file (.xml)</value>
+  </data>
+  <data name="OutputOptionDescription" xml:space="preserve">
+    <value>Path to the output directory for generated Markdown files</value>
+  </data>
+  <data name="ExamplesOptionDescription" xml:space="preserve">
+    <value>Optional directory containing external code example snippets</value>
+  </data>
+  <data name="OverridesOptionDescription" xml:space="preserve">
+    <value>Optional directory containing supplementary markdown sidecar override files</value>
+  </data>
+  <data name="MsDocsOptionDescription" xml:space="preserve">
+    <value>Base URL for Microsoft Learn API documentation links</value>
+  </data>
+  <data name="LogLevelOptionDescription" xml:space="preserve">
+    <value>Console logging minimum level (Trace, Debug, Information, Warning, Error, Critical, None)</value>
+  </data>
+  <data name="AssemblyCommandDescription" xml:space="preserve">
+    <value>Export documentation for one or more compiled assemblies (.dll)</value>
+  </data>
+  <data name="SolutionCommandDescription" xml:space="preserve">
+    <value>Export unified documentation for all projects in a C# solution (.sln or .slnx)</value>
+  </data>
+  <data name="SolutionOptionDescription" xml:space="preserve">
+    <value>Path to the C# solution file (.sln or .slnx)</value>
+  </data>
+  <data name="ConfigurationOptionDescription" xml:space="preserve">
+    <value>Build configuration used to locate compiled project outputs (Debug or Release)</value>
+  </data>
+  <data name="IncludeTestsOptionDescription" xml:space="preserve">
+    <value>Include test projects when exporting a solution</value>
+  </data>
+  <data name="ExternalDocsOptionDescription" xml:space="preserve">
+    <value>Custom third-party documentation link mappings in NamespacePrefix=UrlTemplate format</value>
+  </data>
+  <data name="ConfigCommandDescription" xml:space="preserve">
+    <value>Export documentation using a declarative JSON configuration file</value>
+  </data>
+  <data name="ConfigOptionDescription" xml:space="preserve">
+    <value>Path to the JSON configuration file (doc-exporter.json)</value>
+  </data>
+  <data name="NavFileOptionDescription" xml:space="preserve">
+    <value>Optional path to an existing or target MkDocs YAML file (mkdocs.yml or mkdocs.nav.yml) to generate or extend</value>
+  </data>
+  <data name="NavEntryPointOptionDescription" xml:space="preserve">
+    <value>Optional navigation entry point section path (e.g. 'API Reference' or 'Developer Guide/API Reference') or comment placeholder where generated navigation should be inserted</value>
+  </data>
+  <data name="NavUrlPrefixOptionDescription" xml:space="preserve">
+    <value>Optional relative URL prefix prepended to generated Markdown links in the MkDocs navigation (e.g. 'api')</value>
+  </data>
+  <data name="ExcludeOptionDescription" xml:space="preserve">
+    <value>Optional project or assembly names and wildcard patterns (e.g. '*.Tests', '*.Benchmarks') to exclude when exporting</value>
+  </data>
+  <data name="DiagramFormatOptionDescription" xml:space="preserve">
+    <value>Preferred diagram generator format for type and index pages (for example Mermaid, PlantUml, None, or any custom plugin format; defaults to Mermaid and falls back to another registered generator when a diagram type is unsupported)</value>
+  </data>
+  <data name="CleanOptionDescription" xml:space="preserve">
+    <value>Clean existing Markdown (.md) and PlantUML (.puml) files in the output directory prior to export</value>
+  </data>
+  <data name="FailOnMissingOptionDescription" xml:space="preserve">
+    <value>Fail export execution if any included project artifact (.dll or .xml) in the solution is missing</value>
+  </data>
+  <data name="FailOnUndocumentedOptionDescription" xml:space="preserve">
+    <value>Minimum required documentation coverage percentage (0.0 to 100.0). Export fails if coverage is below this threshold</value>
+  </data>
+  <data name="StrictOptionDescription" xml:space="preserve">
+    <value>Enable strict relative link validation; fails export if any relative Markdown link cannot be resolved</value>
+  </data>
+  <data name="ExcludeTypesOptionDescription" xml:space="preserve">
+    <value>Optional type names or wildcard patterns (e.g. '*Internal*') to exclude from generated documentation</value>
+  </data>
+  <data name="ExcludeNamespacesOptionDescription" xml:space="preserve">
+    <value>Optional namespace names or wildcard patterns (e.g. '*.Migrations') to exclude from generated documentation</value>
+  </data>
+  <data name="ExcludeEditorBrowsableNeverOptionDescription" xml:space="preserve">
+    <value>Automatically excludes types and members decorated with [EditorBrowsable(EditorBrowsableState.Never)].</value>
+  </data>
+  <data name="InvalidExternalDocRuleFormat" xml:space="preserve">
+    <value>Invalid external documentation link rule format: '{0}'. Expected format: '&lt;NamespacePattern&gt;=&lt;UrlTemplate&gt;' (for example, 'Serilog*=https://serilog.net/api/{{type}}').</value>
+  </data>
+  <data name="InvalidFailOnUndocumentedPercentage" xml:space="preserve">
+    <value>Cannot parse argument '{0}' for option '--fail-on-undocumented' as a valid percentage number.</value>
+  </data>
+  <data name="ConfigFileNotFound" xml:space="preserve">
+    <value>Configuration file not found: '{0}'.</value>
+  </data>
+  <data name="ConfigFileLoadFailed" xml:space="preserve">
+    <value>Failed to load configuration file '{0}': {1}</value>
+  </data>
+  <data name="ReportFileOptionDescription" xml:space="preserve">
+    <value>Optional output file path for the structured documentation quality and diagnostics report.</value>
+  </data>
+  <data name="ReportFormatOptionDescription" xml:space="preserve">
+    <value>Output format for the documentation quality report: Json (default), Markdown, Sarif, or a custom plugin format name.</value>
+  </data>
+  <data name="NavFormatOptionDescription" xml:space="preserve">
+    <value>Target static-site navigation generator format (MkDocs by default, None to disable, or any custom plugin format name).</value>
+  </data>
+  <data name="PluginsDirOptionDescription" xml:space="preserve">
+    <value>Optional directory path containing external plugin assemblies (.dll) implementing IDocumentationExporterPlugin.</value>
+  </data>
+  <data name="InvalidDiagramFormat" xml:space="preserve">
+    <value>Cannot parse argument '{0}' for option '--diagram-format' as a valid diagram format name.</value>
+  </data>
+  <data name="InvalidReportFormat" xml:space="preserve">
+    <value>Cannot parse argument '{0}' for option '--report-format' as a valid quality report format name.</value>
+  </data>
+  <data name="InvalidNavigationFormat" xml:space="preserve">
+    <value>Cannot parse argument '{0}' for option '--nav-format' as a valid navigation format name.</value>
+  </data>
+</root>

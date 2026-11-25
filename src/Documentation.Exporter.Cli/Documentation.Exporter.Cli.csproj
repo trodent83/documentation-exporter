@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <RootNamespace>Documentation.Exporter.Cli</RootNamespace>
+    <AssemblyName>Documentation.Exporter.Cli</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Documentation.Exporter.Abstractions\Documentation.Exporter.Abstractions.csproj" />
+    <ProjectReference Include="..\Documentation.Exporter.Core\Documentation.Exporter.Core.csproj" />
+    <ProjectReference Include="..\Documentation.Exporter.Plugins.Diagrams\Documentation.Exporter.Plugins.Diagrams.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Documentation.Exporter.Plugins.Navigation.MkDocs\Documentation.Exporter.Plugins.Navigation.MkDocs.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBuiltInPluginsToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <BuiltInDiagramPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.deps.json" />
+      <BuiltInNavigationPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BuiltInDiagramPluginFiles)"
+          DestinationFolder="$(TargetDir)plugins/Documentation.Exporter.Plugins.Diagrams"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(BuiltInNavigationPluginFiles)"
+          DestinationFolder="$(TargetDir)plugins/Documentation.Exporter.Plugins.Navigation.MkDocs"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyBuiltInPluginsToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <BuiltInDiagramPublishPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.deps.json" />
+      <BuiltInNavigationPublishPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BuiltInDiagramPublishPluginFiles)"
+          DestinationFolder="$(PublishDir)plugins/Documentation.Exporter.Plugins.Diagrams"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(BuiltInNavigationPublishPluginFiles)"
+          DestinationFolder="$(PublishDir)plugins/Documentation.Exporter.Plugins.Navigation.MkDocs"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

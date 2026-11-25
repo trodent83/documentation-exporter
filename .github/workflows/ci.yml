@@ -1,0 +1,257 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  DOTNET_VERSION: '11.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  MIN_LINE_COVERAGE: '90.0'
+  # Current branch coverage is ~87.9%; raise to '90.0' once branch coverage exceeds 90%.
+  MIN_BRANCH_COVERAGE: '85.0'
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore documentation-exporter.slnx
+
+      - name: Build solution (Release)
+        run: dotnet build documentation-exporter.slnx --configuration Release --no-restore
+
+      - name: Resolve semantic version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $resolvedVersion = (dotnet msbuild src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -target:MinVer -getProperty:Version -p:Configuration=Release).Trim()
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resolvedVersion)) {
+            throw 'Failed to resolve MinVer semantic version from Documentation.Exporter.Cli.'
+          }
+          "RESOLVED_VERSION=$resolvedVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Resolved SemVer version: $resolvedVersion"
+
+      - name: Publish CLI and verify staged plugins
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet publish src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj --configuration Release --no-build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $publishPluginsDir = 'build/publish/Documentation.Exporter.Cli/release/plugins'
+          $expectedPluginDlls = @(
+            (Join-Path $publishPluginsDir 'Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll'),
+            (Join-Path $publishPluginsDir 'Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll')
+          )
+
+          foreach ($pluginDll in $expectedPluginDlls) {
+            if (-not (Test-Path $pluginDll)) {
+              throw "Expected staged plugin assembly was not found: $pluginDll"
+            }
+          }
+
+          $duplicateAbstractions = Get-ChildItem -Path $publishPluginsDir -Filter 'Documentation.Exporter.Abstractions.dll' -Recurse
+          if ($duplicateAbstractions) {
+            throw "Plugin staging must not duplicate Documentation.Exporter.Abstractions.dll inside $publishPluginsDir."
+          }
+
+          Write-Host 'Verified staged plugins in publish output without duplicate Abstractions contract.'
+
+      - name: Run tests and collect Cobertura coverage
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (Test-Path 'TestResults') {
+            Remove-Item -Path 'TestResults' -Recurse -Force
+          }
+
+          dotnet test documentation-exporter.slnx `
+            --configuration Release `
+            --no-build `
+            --verbosity normal `
+            --logger 'trx;LogFileName=test-results.trx' `
+            --results-directory TestResults `
+            --collect:'XPlat Code Coverage' `
+            -- `
+            'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute=Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute' `
+            'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile=**/*.g.cs' `
+            'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[Documentation.Exporter.Abstractions]*,[Documentation.Exporter.Core]*,[Documentation.Exporter.Cli]*,[Documentation.Exporter.Plugins.Diagrams]*,[Documentation.Exporter.Plugins.Navigation.MkDocs]*'
+
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Evaluate coverage thresholds & write Job Summary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $coverageFiles = Get-ChildItem -Path 'TestResults' -Filter 'coverage.cobertura.xml' -Recurse
+          if (-not $coverageFiles -or $coverageFiles.Count -eq 0) {
+            throw 'No coverage.cobertura.xml file was produced under TestResults/.'
+          }
+
+          [xml]$coberturaXml = Get-Content -Path $coverageFiles[0].FullName
+          $root = $coberturaXml.coverage
+          $linesCovered = [int]$root.'lines-covered'
+          $linesValid = [int]$root.'lines-valid'
+          $branchesCovered = [int]$root.'branches-covered'
+          $branchesValid = [int]$root.'branches-valid'
+
+          $linePct = if ($linesValid -gt 0) { [math]::Round(($linesCovered / $linesValid) * 100, 2) } else { 100.0 }
+          $branchPct = if ($branchesValid -gt 0) { [math]::Round(($branchesCovered / $branchesValid) * 100, 2) } else { 100.0 }
+
+          $minLine = [double]$env:MIN_LINE_COVERAGE
+          $minBranch = [double]$env:MIN_BRANCH_COVERAGE
+
+          $summary = [System.Text.StringBuilder]::new()
+          [void]$summary.AppendLine("### Build & Code Coverage (${{ matrix.os }})")
+          [void]$summary.AppendLine('')
+          [void]$summary.AppendLine("**Resolved SemVer:** ``$($env:RESOLVED_VERSION)``")
+          [void]$summary.AppendLine('')
+          [void]$summary.AppendLine("| Metric | Coverage | Covered / Valid | Minimum Gate |")
+          [void]$summary.AppendLine("| :--- | ---: | ---: | ---: |")
+          [void]$summary.AppendLine("| **Line Coverage** | **$linePct%** | $linesCovered / $linesValid | $minLine% |")
+          [void]$summary.AppendLine("| **Branch Coverage** | **$branchPct%** | $branchesCovered / $branchesValid | $minBranch% |")
+          [void]$summary.AppendLine('')
+          [void]$summary.AppendLine("| Assembly | Line % | Branch % |")
+          [void]$summary.AppendLine("| :--- | ---: | ---: |")
+
+          foreach ($pkg in $root.packages.package) {
+            $pkgLine = [math]::Round([double]$pkg.'line-rate' * 100, 2)
+            $pkgBranch = [math]::Round([double]$pkg.'branch-rate' * 100, 2)
+            [void]$summary.AppendLine("| ``$($pkg.name)`` | $pkgLine% | $pkgBranch% |")
+          }
+
+          if ($env:GITHUB_STEP_SUMMARY) {
+            $summary.ToString() | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          }
+          Write-Host $summary.ToString()
+
+          if ($linePct -lt $minLine) {
+            throw "Line coverage ($linePct%) is below required minimum ($minLine%)."
+          }
+          if ($branchPct -lt $minBranch) {
+            throw "Branch coverage ($branchPct%) is below required minimum ($minBranch%)."
+          }
+
+      - name: Upload test & coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-${{ matrix.os }}
+          path: TestResults
+          retention-days: 14
+
+  demo-export-verification:
+    name: Demo Export & Strict Link Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build Demo solution & CLI (Release)
+        run: |
+          dotnet build demo/Documentation.Exporter.Demo.slnx --configuration Release
+          dotnet build src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj --configuration Release
+
+      - name: Run end-to-end Demo export (Mermaid & PlantUML with --strict)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          & scripts/manual/Run-DemoExport.ps1 -Configuration Release -DiagramFormat Mermaid
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          if (-not (Test-Path '.demo-output/mkdocs.nav.yml')) {
+            throw 'Expected .demo-output/mkdocs.nav.yml was not generated in Mermaid demo run.'
+          }
+          if (-not (Test-Path '.demo-output/quality-report.json')) {
+            throw 'Expected .demo-output/quality-report.json was not generated in Mermaid demo run.'
+          }
+
+          & scripts/manual/Run-DemoExport.ps1 -Configuration Release -DiagramFormat PlantUml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          if (-not (Test-Path '.demo-output/architecture.puml')) {
+            throw 'Expected .demo-output/architecture.puml was not generated in PlantUML demo run.'
+          }
+          if (-not (Test-Path '.demo-output/mkdocs.nav.yml')) {
+            throw 'Expected .demo-output/mkdocs.nav.yml was not generated in PlantUML demo run.'
+          }
+          if (-not (Test-Path '.demo-output/quality-report.json')) {
+            throw 'Expected .demo-output/quality-report.json was not generated in PlantUML demo run.'
+          }
+
+      - name: Upload Demo output artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: demo-export-output
+          path: .demo-output
+          retention-days: 7
+
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-test
+      - demo-export-verification
+    if: always()
+
+    steps:
+      - name: Verify all required CI jobs succeeded
+        shell: pwsh
+        run: |
+          $buildResult = '${{ needs.build-and-test.result }}'
+          $demoResult = '${{ needs.demo-export-verification.result }}'
+
+          Write-Host "build-and-test          : $buildResult"
+          Write-Host "demo-export-verification: $demoResult"
+
+          if ($buildResult -ne 'success' -or $demoResult -ne 'success') {
+            Write-Error "CI Gate failed: build-and-test='$buildResult', demo-export-verification='$demoResult'."
+            exit 1
+          }
+
+          Write-Host 'All CI Gate checks passed.'

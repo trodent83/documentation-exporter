@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Documentation.Exporter.DemoContracts/Documentation.Exporter.DemoContracts.csproj" />
+  <Project Path="Documentation.Exporter.DemoLibrary/Documentation.Exporter.DemoLibrary.csproj" />
+</Solution>

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <RootNamespace>Documentation.Exporter.Core.Tests</RootNamespace>
+    <AssemblyName>Documentation.Exporter.Core.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Documentation.Exporter.Abstractions\Documentation.Exporter.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\Documentation.Exporter.Core\Documentation.Exporter.Core.csproj" />
+    <ProjectReference Include="..\..\src\Documentation.Exporter.Cli\Documentation.Exporter.Cli.csproj" />
+    <ProjectReference Include="..\..\src\Documentation.Exporter.Plugins.Diagrams\Documentation.Exporter.Plugins.Diagrams.csproj" />
+    <ProjectReference Include="..\..\src\Documentation.Exporter.Plugins.Navigation.MkDocs\Documentation.Exporter.Plugins.Navigation.MkDocs.csproj" />
+    <ProjectReference Include="..\..\demo\Documentation.Exporter.DemoContracts\Documentation.Exporter.DemoContracts.csproj" />
+    <ProjectReference Include="..\..\demo\Documentation.Exporter.DemoLibrary\Documentation.Exporter.DemoLibrary.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyBuiltInPluginsToTestOutput" AfterTargets="Build">
+    <ItemGroup>
+      <BuiltInTestDiagramPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Diagrams/$(Configuration.ToLowerInvariant())/*.deps.json" />
+      <BuiltInTestNavigationPluginFiles Include="$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.dll;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.pdb;$(ArtifactsPath)/bin/Documentation.Exporter.Plugins.Navigation.MkDocs/$(Configuration.ToLowerInvariant())/*.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BuiltInTestDiagramPluginFiles)"
+          DestinationFolder="$(TargetDir)plugins/Documentation.Exporter.Plugins.Diagrams"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(BuiltInTestNavigationPluginFiles)"
+          DestinationFolder="$(TargetDir)plugins/Documentation.Exporter.Plugins.Navigation.MkDocs"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

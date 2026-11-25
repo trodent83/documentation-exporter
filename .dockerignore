@@ -1,0 +1,71 @@
+# =============================================================================
+# 1. Version Control & CI/CD Metadata
+# =============================================================================
+# Exclude Git history and repository workflow configurations to keep the Docker
+# build context small and prevent cache invalidation on metadata changes.
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.github
+
+# =============================================================================
+# 2. Local Build Outputs & Intermediate Artifacts
+# =============================================================================
+# Exclude host-compiled binaries and intermediate files so the container builds
+# cleanly from source for its target Linux architecture.
+**/[Bb]uild
+**/[Bb]in
+**/[Oo]bj
+**/[Oo]ut
+**/publish
+
+# =============================================================================
+# 3. Test Suites, Demo Projects, Coverage Reports & Helper Scripts
+# =============================================================================
+# Only production source projects (src/) are needed to build the runtime image;
+# excluding tests, demo assemblies, and coverage artifacts speeds up context transfer.
+test/
+demo/
+.demo-output/
+scripts/
+**/[Tt]est[Rr]esults
+**/*.trx
+**/coverage*.xml
+
+# =============================================================================
+# 4. Documentation, Sample Outputs & Agent Configurations
+# =============================================================================
+# Markdown guides, sample generated outputs, and AI agent rules are not required
+# inside the container build or runtime image.
+docs/
+sample_docs_output/
+.agents/
+README.md
+.markdownlint.json
+
+# =============================================================================
+# 5. IDE, Editor & Solution Workspace Files
+# =============================================================================
+# Local editor settings, caches, and solution files not referenced by Dockerfile.
+**/.vs
+**/.vscode
+**/.idea
+**/*.user
+**/*.suo
+**/*.userprefs
+**/*.userosscache
+**/*.sln.docstates
+*.slnx
+.editorconfig
+
+# =============================================================================
+# 6. Temporary Logs & Operating System Metadata
+# =============================================================================
+# Ephemeral diagnostic logs and OS-specific filesystem metadata.
+**/*.tmp
+**/*.log
+**/*.binlog
+build_errors.txt
+**/.DS_Store
+**/Thumbs.db
+**/Desktop.ini

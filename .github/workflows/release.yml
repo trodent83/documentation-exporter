@@ -1,0 +1,202 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '11.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  verify:
+    name: Verify Tagged Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      is_prerelease: ${{ steps.semver.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate SemVer 2.0 tag
+        id: semver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = '${{ github.ref_name }}'
+          $semverPattern = '^v(?<core>(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?<pre>-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?<meta>\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$'
+          if ($tag -notmatch $semverPattern) {
+            throw "Tag '$tag' is not a valid SemVer 2.0 tag prefixed with 'v' (expected e.g. v1.0.0 or v1.2.0-rc.1)."
+          }
+
+          $version = $tag.Substring(1)
+          $isPrerelease = if ($Matches['pre']) { 'true' } else { 'false' }
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "is_prerelease=$isPrerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "Validated SemVer tag: $tag (version=$version, prerelease=$isPrerelease)"
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore, build, and test (Release)
+        run: |
+          dotnet restore documentation-exporter.slnx
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          dotnet test documentation-exporter.slnx --configuration Release --no-build --verbosity minimal
+
+      - name: Verify MSBuild / MinVer resolved version matches tag
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $resolvedVersion = (dotnet msbuild src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -target:MinVer -getProperty:Version -p:Configuration=Release).Trim()
+          $expectedBase = ('${{ steps.semver.outputs.version }}' -split '\+', 2)[0]
+          $resolvedBase = ($resolvedVersion -split '\+', 2)[0]
+
+          Write-Host "Tagged SemVer   : ${{ steps.semver.outputs.version }}"
+          Write-Host "MinVer Resolved : $resolvedVersion"
+
+          if ($resolvedBase -ne $expectedBase) {
+            throw "Resolved MinVer version '$resolvedVersion' does not match expected tag version '$expectedBase'."
+          }
+
+  package:
+    name: Package CLI (${{ matrix.rid }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            os: ubuntu-latest
+            archive: tar.gz
+          - rid: win-x64
+            os: windows-latest
+            archive: zip
+          - rid: osx-arm64
+            os: macos-latest
+            archive: tar.gz
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build portable solution & publish CLI (${{ matrix.rid }})
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore documentation-exporter.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # Build portable AnyCPU plugins so CopyBuiltInPluginsToPublish stages build/bin/Documentation.Exporter.Plugins.*/release/
+          dotnet build documentation-exporter.slnx --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $stageDir = 'release-stage/${{ matrix.rid }}'
+          dotnet publish src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj `
+            --configuration Release `
+            --runtime '${{ matrix.rid }}' `
+            --self-contained false `
+            --output $stageDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $pluginsDir = Join-Path $stageDir 'plugins'
+          $expectedPluginDlls = @(
+            (Join-Path $pluginsDir 'Documentation.Exporter.Plugins.Diagrams/Documentation.Exporter.Plugins.Diagrams.dll'),
+            (Join-Path $pluginsDir 'Documentation.Exporter.Plugins.Navigation.MkDocs/Documentation.Exporter.Plugins.Navigation.MkDocs.dll')
+          )
+          foreach ($pluginDll in $expectedPluginDlls) {
+            if (-not (Test-Path $pluginDll)) {
+              throw "Expected staged plugin assembly was not found: $pluginDll"
+            }
+          }
+
+          $duplicateAbstractions = Get-ChildItem -Path $pluginsDir -Filter 'Documentation.Exporter.Abstractions.dll' -Recurse
+          if ($duplicateAbstractions) {
+            throw "Plugin staging must not duplicate Documentation.Exporter.Abstractions.dll inside $pluginsDir."
+          }
+
+      - name: Archive release package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = '${{ needs.verify.outputs.version }}'
+          $rid = '${{ matrix.rid }}'
+          $archiveType = '${{ matrix.archive }}'
+          $stageDir = "release-stage/$rid"
+
+          New-Item -ItemType Directory -Path 'release-assets' -Force | Out-Null
+          $archiveBase = "release-assets/documentation-exporter-v$version-$rid"
+
+          if ($archiveType -eq 'zip') {
+            Compress-Archive -Path "$stageDir/*" -DestinationPath "$archiveBase.zip" -Force
+          } else {
+            tar -czf "$archiveBase.tar.gz" -C $stageDir .
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Upload packaged CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-asset-${{ matrix.rid }}
+          path: release-assets/
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs:
+      - verify
+      - package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-asset-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate SHA-256 checksums
+        working-directory: release-assets
+        run: |
+          sha256sum documentation-exporter-* > checksums.sha256
+          cat checksums.sha256
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          flags=(
+            "${{ github.ref_name }}"
+            release-assets/*
+            --repo "${{ github.repository }}"
+            --title "${{ github.ref_name }}"
+            --generate-notes
+          )
+          if [ "${{ needs.verify.outputs.is_prerelease }}" = "true" ]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "${flags[@]}"

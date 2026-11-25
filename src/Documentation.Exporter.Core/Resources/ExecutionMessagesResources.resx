@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CliInitializingPipeline" xml:space="preserve">
+    <value>Initializing Documentation Exporter Pipeline...</value>
+  </data>
+  <data name="CliExportSuccess" xml:space="preserve">
+    <value>Documentation export completed successfully.</value>
+  </data>
+  <data name="CliExportError" xml:space="preserve">
+    <value>Documentation export failed. Please check the log messages above for details.</value>
+  </data>
+  <data name="EngineStartingExport" xml:space="preserve">
+    <value>Starting documentation export for target assembly: {0}</value>
+  </data>
+  <data name="ReflectorAssemblyFilePathMissing" xml:space="preserve">
+    <value>Assembly file path is missing or empty.</value>
+  </data>
+  <data name="ReflectorAssemblyFileNotFound" xml:space="preserve">
+    <value>Assembly file not found at path: {0}</value>
+  </data>
+  <data name="ReflectorLoadingAssembly" xml:space="preserve">
+    <value>Loading target assembly from path: {0}</value>
+  </data>
+  <data name="ReflectorExtractedTypes" xml:space="preserve">
+    <value>Extracted {0} exported public types from assembly.</value>
+  </data>
+  <data name="ReflectorFailedLoadingAssembly" xml:space="preserve">
+    <value>Failed to load target assembly from path: {0}</value>
+  </data>
+  <data name="XmlParserFilePathMissing" xml:space="preserve">
+    <value>XML documentation file path is missing or empty.</value>
+  </data>
+  <data name="XmlParserFileNotFound" xml:space="preserve">
+    <value>XML documentation file not found at path: {0}</value>
+  </data>
+  <data name="XmlParserLoadingFile" xml:space="preserve">
+    <value>Loading XML documentation file from path: {0}</value>
+  </data>
+  <data name="XmlParserNoMembersRoot" xml:space="preserve">
+    <value>XML documentation file contains no &lt;members&gt; root element.</value>
+  </data>
+  <data name="XmlParserIndexedMembers" xml:space="preserve">
+    <value>Successfully indexed {0} XML documentation members.</value>
+  </data>
+  <data name="XmlParserFailedParsing" xml:space="preserve">
+    <value>Failed to parse XML documentation file at path: {0}</value>
+  </data>
+  <data name="ExampleProviderLoadingMemberExample" xml:space="preserve">
+    <value>Loading external code example snippet for member {0}.{1}</value>
+  </data>
+  <data name="ExampleProviderLoadingTypeExample" xml:space="preserve">
+    <value>Loading external code example snippet for type {0}</value>
+  </data>
+  <data name="InjectorLoadingSidecar" xml:space="preserve">
+    <value>Loading sidecar documentation override file: {0}</value>
+  </data>
+  <data name="WorkflowStarted" xml:space="preserve">
+    <value>Starting documentation export workflow with {0} steps.</value>
+  </data>
+  <data name="WorkflowExecutingStep" xml:space="preserve">
+    <value>Executing workflow step: {0}</value>
+  </data>
+  <data name="WorkflowStepFailed" xml:space="preserve">
+    <value>Workflow step '{0}' reported failure. Aborting workflow.</value>
+  </data>
+  <data name="WorkflowCompleted" xml:space="preserve">
+    <value>Documentation export workflow completed successfully.</value>
+  </data>
+  <data name="StepNameValidateOptions" xml:space="preserve">
+    <value>Validate Exporter Options</value>
+  </data>
+  <data name="StepValidationError" xml:space="preserve">
+    <value>ExporterOptions Validation Error: {0}</value>
+  </data>
+  <data name="StepNameLoadAssemblyTypes" xml:space="preserve">
+    <value>Load Assembly Types</value>
+  </data>
+  <data name="StepNoTypesFound" xml:space="preserve">
+    <value>No exported public types found in target assembly: {0}</value>
+  </data>
+  <data name="StepNameConfigureResolutionHandlers" xml:space="preserve">
+    <value>Configure Resolution Handlers</value>
+  </data>
+  <data name="StepNameLoadXmlDocumentation" xml:space="preserve">
+    <value>Load XML Documentation</value>
+  </data>
+  <data name="StepFailedParseXml" xml:space="preserve">
+    <value>Failed to parse XML documentation file: {0}</value>
+  </data>
+  <data name="StepNameCompileTypeDocumentationModels" xml:space="preserve">
+    <value>Compile Type Documentation Models</value>
+  </data>
+  <data name="StepNameEnsureOutputDirectory" xml:space="preserve">
+    <value>Ensure Output Directory</value>
+  </data>
+  <data name="StepFailedCreateOutputDir" xml:space="preserve">
+    <value>Failed to create output directory: {0}</value>
+  </data>
+  <data name="StepNameEmitMarkdownDocumentation" xml:space="preserve">
+    <value>Emit Markdown Documentation</value>
+  </data>
+  <data name="StepNameCalculateDocumentationCoverage" xml:space="preserve">
+    <value>Calculate Documentation Coverage</value>
+  </data>
+  <data name="StepNameValidateMarkdownLinks" xml:space="preserve">
+    <value>Validate Markdown Links</value>
+  </data>
+  <data name="StepFilesGenerated" xml:space="preserve">
+    <value>Generated {0} Markdown documentation files.</value>
+  </data>
+  <data name="NavigationGeneratorNotFoundWarning" xml:space="preserve">
+    <value>No INavigationGenerator registered for navigation format '{0}'. Skipping navigation manifest generation.</value>
+  </data>
+  <data name="StepNameEmitQualityReport" xml:space="preserve">
+    <value>Emit Documentation Quality Report</value>
+  </data>
+  <data name="StepQualityDiagnosticsSummary" xml:space="preserve">
+    <value>Documentation quality analysis completed: {0} diagnostic(s) recorded ({1} error(s), {2} warning(s)).</value>
+  </data>
+  <data name="StepBrokenAnchorDetected" xml:space="preserve">
+    <value>Broken Markdown anchor in '{0}' (line {1}): target '{2}' does not contain heading '#{3}'.</value>
+  </data>
+  <data name="StepQualityReportEmitted" xml:space="preserve">
+    <value>Documentation quality report ({0}) written to: {1}</value>
+  </data>
+  <data name="StepQualityReportFailed" xml:space="preserve">
+    <value>Failed to write documentation quality report to '{0}': {1}</value>
+  </data>
+  <data name="PluginScannerScanningDirectory" xml:space="preserve">
+    <value>Scanning plugins directory: {0}</value>
+  </data>
+  <data name="PluginScannerDirectoryMissing" xml:space="preserve">
+    <value>Plugins directory does not exist; skipping plugin discovery: {0}</value>
+  </data>
+  <data name="PluginLoaderLoadedPlugin" xml:space="preserve">
+    <value>Loaded plugin '{0}' ({1}) from '{2}'.</value>
+  </data>
+  <data name="PluginLoaderAssemblyFailed" xml:space="preserve">
+    <value>Failed to load or inspect candidate plugin assembly '{0}': {1}</value>
+  </data>
+  <data name="PluginLoaderActivationFailed" xml:space="preserve">
+    <value>Failed to activate or configure plugin '{0}' from '{1}': {2}</value>
+  </data>
+  <data name="PluginLoaderSummary" xml:space="preserve">
+    <value>Loaded {0} plugin(s) from '{1}'.</value>
+  </data>
+</root>

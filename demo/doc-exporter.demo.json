@@ -1,0 +1,25 @@
+{
+  "solutionFilePath": "Documentation.Exporter.Demo.slnx",
+  "solutionConfiguration": "Debug",
+  "includeTestProjects": false,
+  "excludedProjects": [
+    "*.Tests",
+    "*.Benchmarks"
+  ],
+  "diagramFormat": "Mermaid",
+  "strictLinkValidation": true,
+  "outputDirectoryPath": "../.demo-output",
+  "examplesDirectoryPath": "Documentation.Exporter.DemoLibrary/docs_extra/examples",
+  "overridesDirectoryPath": "Documentation.Exporter.DemoLibrary/docs_extra/overrides",
+  "navigationFilePath": "../.demo-output/mkdocs.nav.yml",
+  "navigationEntryPoint": "Developer Portal/API Reference",
+  "reportFilePath": "../.demo-output/quality-report.json",
+  "reportFormat": "Json",
+  "microsoftDocsBaseUrl": "https://learn.microsoft.com/en-us/dotnet/api/",
+  "externalDocLinkRules": [
+    {
+      "namespacePrefix": "Newtonsoft.Json",
+      "urlTemplate": "https://www.newtonsoft.com/json/help/html/T_{fullNameUnderscore}.htm"
+    }
+  ]
+}

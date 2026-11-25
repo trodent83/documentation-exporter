@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Documentation.Exporter.DemoLibrary</RootNamespace>
+    <AssemblyName>Documentation.Exporter.DemoLibrary</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="docs_extra\**" />
+    <None Include="docs_extra\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Documentation.Exporter.DemoContracts\Documentation.Exporter.DemoContracts.csproj" />
+  </ItemGroup>
+
+</Project>
