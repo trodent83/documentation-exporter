@@ -240,7 +240,7 @@ jobs:
           }
 
       - name: Upload test & coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: test-results-${{ matrix.os }}
@@ -296,7 +296,7 @@ jobs:
           }
 
       - name: Upload Demo output artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: demo-export-output
