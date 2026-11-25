@@ -37,14 +37,14 @@ Discovers every non-test project in `.sln` or `.slnx`, correlates `.csproj` and 
   --configuration Debug `
   --exclude "*.Tests" "*.Benchmarks" `
   --diagram-format Mermaid `
-  --output ".demo-output" `
+  --output "build\.demo-output" `
   --examples-dir "demo\Documentation.Exporter.DemoLibrary\docs_extra\examples" `
   --overrides-dir "demo\Documentation.Exporter.DemoLibrary\docs_extra\overrides" `
   --external-docs "Newtonsoft.Json=https://www.newtonsoft.com/json/help/html/T_{fullNameUnderscore}.htm" `
-  --nav-file ".demo-output\mkdocs.nav.yml" `
+  --nav-file "build\.demo-output\mkdocs.nav.yml" `
   --nav-entry-point "Developer Portal/API Reference" `
   --strict `
-  --report-file ".demo-output\quality-report.json" `
+  --report-file "build\.demo-output\quality-report.json" `
   --report-format Json `
   --log-level Information
 ```
@@ -59,7 +59,7 @@ Exports one or more compiled `.dll` files. If `--xml` is omitted, the tool autom
              "build\bin\Documentation.Exporter.DemoLibrary\debug\Documentation.Exporter.DemoLibrary.dll" `
   --xml "build\bin\Documentation.Exporter.DemoContracts\debug\Documentation.Exporter.DemoContracts.xml" `
         "build\bin\Documentation.Exporter.DemoLibrary\debug\Documentation.Exporter.DemoLibrary.xml" `
-  --output ".demo-output" `
+  --output "build\.demo-output" `
   --examples-dir "demo\Documentation.Exporter.DemoLibrary\docs_extra\examples" `
   --overrides-dir "demo\Documentation.Exporter.DemoLibrary\docs_extra\overrides" `
   --msdocs-url "https://learn.microsoft.com/en-us/dotnet/api/" `
@@ -93,12 +93,12 @@ Here is the real configuration file shipped in [`demo/doc-exporter.demo.json`](.
   ],
   "diagramFormat": "Mermaid",
   "strictLinkValidation": true,
-  "outputDirectoryPath": "../.demo-output",
+  "outputDirectoryPath": "../build/.demo-output",
   "examplesDirectoryPath": "Documentation.Exporter.DemoLibrary/docs_extra/examples",
   "overridesDirectoryPath": "Documentation.Exporter.DemoLibrary/docs_extra/overrides",
-  "navigationFilePath": "../.demo-output/mkdocs.nav.yml",
+  "navigationFilePath": "../build/.demo-output/mkdocs.nav.yml",
   "navigationEntryPoint": "Developer Portal/API Reference",
-  "reportFilePath": "../.demo-output/quality-report.json",
+  "reportFilePath": "../build/.demo-output/quality-report.json",
   "reportFormat": "Json",
   "microsoftDocsBaseUrl": "https://learn.microsoft.com/en-us/dotnet/api/",
   "externalDocLinkRules": [

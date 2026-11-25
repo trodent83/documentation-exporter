@@ -121,7 +121,7 @@ flowchart TD
 | Document | Description |
 | :--- | :--- |
 | [User Documentation Hub](user/index.md) | End-to-end user workflow, export mode selection guide, and guide navigation |
-| [Getting Started & Demo Showcase](user/getting-started-and-demo.md) | Building the CLI, running the real [`demo/Documentation.Exporter.Demo.slnx`](../demo/Documentation.Exporter.Demo.slnx) showcase locally or in Docker, and exploring `.demo-output/` |
+| [Getting Started & Demo Showcase](user/getting-started-and-demo.md) | Building the CLI, running the real [`demo/Documentation.Exporter.Demo.slnx`](../demo/Documentation.Exporter.Demo.slnx) showcase locally or in Docker, and exploring `build/.demo-output/` |
 | [CLI Commands, Options, & JSON Configuration](user/cli-and-configuration.md) | `solution`, `assembly`, and `config` subcommands, full CLI flags, `doc-exporter.json` schema with the real demo config, and exit-code troubleshooting |
 | [Authoring XML Documentation Comments](user/xml-documentation-authoring.md) | Enabling XML output, XML tag-to-Markdown reference, `<inheritdoc/>` resolution, `[Obsolete]`, custom attributes, generics, enums, and extension methods from the demo project |
 | [AI Agent Command for Authoring C# Interface & API XML Documentation](user/ai-agent-documentation-command.md) | Copy-ready AI agent workflow/slash command (`document-interfaces.md`) for enriching another C# project's interfaces and contracts with rich XML documentation comments, examples, and remarks prior to running `Documentation.Exporter.Cli` |

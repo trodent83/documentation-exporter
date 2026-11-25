@@ -274,24 +274,24 @@ jobs:
           & scripts/manual/Run-DemoExport.ps1 -Configuration Release -DiagramFormat Mermaid
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          if (-not (Test-Path '.demo-output/mkdocs.nav.yml')) {
-            throw 'Expected .demo-output/mkdocs.nav.yml was not generated in Mermaid demo run.'
+          if (-not (Test-Path 'build/.demo-output/mkdocs.nav.yml')) {
+            throw 'Expected build/.demo-output/mkdocs.nav.yml was not generated in Mermaid demo run.'
           }
-          if (-not (Test-Path '.demo-output/quality-report.json')) {
-            throw 'Expected .demo-output/quality-report.json was not generated in Mermaid demo run.'
+          if (-not (Test-Path 'build/.demo-output/quality-report.json')) {
+            throw 'Expected build/.demo-output/quality-report.json was not generated in Mermaid demo run.'
           }
 
           & scripts/manual/Run-DemoExport.ps1 -Configuration Release -DiagramFormat PlantUml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          if (-not (Test-Path '.demo-output/architecture.puml')) {
-            throw 'Expected .demo-output/architecture.puml was not generated in PlantUML demo run.'
+          if (-not (Test-Path 'build/.demo-output/architecture.puml')) {
+            throw 'Expected build/.demo-output/architecture.puml was not generated in PlantUML demo run.'
           }
-          if (-not (Test-Path '.demo-output/mkdocs.nav.yml')) {
-            throw 'Expected .demo-output/mkdocs.nav.yml was not generated in PlantUML demo run.'
+          if (-not (Test-Path 'build/.demo-output/mkdocs.nav.yml')) {
+            throw 'Expected build/.demo-output/mkdocs.nav.yml was not generated in PlantUML demo run.'
           }
-          if (-not (Test-Path '.demo-output/quality-report.json')) {
-            throw 'Expected .demo-output/quality-report.json was not generated in PlantUML demo run.'
+          if (-not (Test-Path 'build/.demo-output/quality-report.json')) {
+            throw 'Expected build/.demo-output/quality-report.json was not generated in PlantUML demo run.'
           }
 
       - name: Upload Demo output artifacts
@@ -299,7 +299,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: demo-export-output
-          path: .demo-output
+          path: build/.demo-output
           retention-days: 7
 
   ci-gate:

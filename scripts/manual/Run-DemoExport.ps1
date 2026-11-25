@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Builds the demo showcase C# solution (demo/Documentation.Exporter.Demo.slnx) and runs the standalone Documentation.Exporter.Cli console executable against it, emitting unified multi-assembly Markdown documentation into .demo-output/.
+    Builds the demo showcase C# solution (demo/Documentation.Exporter.Demo.slnx) and runs the standalone Documentation.Exporter.Cli console executable against it, emitting unified multi-assembly Markdown documentation into build/.demo-output/.
 
 .DESCRIPTION
     Performs a complete three-stage local end-to-end verification of Documentation.Exporter:
@@ -15,7 +15,7 @@
 
 .PARAMETER OutputDir
     The target directory path (relative to the repository root) where generated Markdown files, `mkdocs.nav.yml`, and `quality-report.json` will be written.
-    Note: Any existing contents in this directory are deleted prior to export. Defaults to ".demo-output".
+    Note: Any existing contents in this directory are deleted prior to export. Defaults to "build/.demo-output".
 
 .PARAMETER LogLevel
     The minimum console logging verbosity passed to `--log-level` on `Documentation.Exporter.Cli`.
@@ -30,15 +30,15 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport.ps1
-    Builds the demo solution and CLI in Debug mode and exports the showcase documentation with Mermaid diagrams into `.demo-output/`.
+    Builds the demo solution and CLI in Debug mode and exports the showcase documentation with Mermaid diagrams into `build/.demo-output/`.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport.ps1 -Configuration Release -DiagramFormat PlantUml
     Builds in Release mode and exports the showcase documentation using PlantUML diagrams (including standalone `architecture.puml` files).
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport.ps1 -OutputDir ".demo-output-debug" -LogLevel Debug
-    Exports the demo documentation into `.demo-output-debug/` with verbose Debug console telemetry.
+    powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport.ps1 -OutputDir "build/.demo-output-debug" -LogLevel Debug
+    Exports the demo documentation into `build/.demo-output-debug/` with verbose Debug console telemetry.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport.ps1 -DiagramFormat None -LogLevel Warning
@@ -48,7 +48,7 @@
 param (
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug",
-    [string]$OutputDir = ".demo-output",
+    [string]$OutputDir = "build/.demo-output",
     [string]$LogLevel = "Information",
     [ValidateSet("Mermaid", "PlantUml", "None")]
     [string]$DiagramFormat = "Mermaid"

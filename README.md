@@ -66,7 +66,7 @@ The standalone executable and staged `plugins/` directory are emitted under `bui
 
 ### 2. Run the Included Demo Showcase
 
-The repository includes a two-project C# 14 showcase solution ([`demo/Documentation.Exporter.Demo.slnx`](demo/Documentation.Exporter.Demo.slnx)) exercising XML tags, `.cs` snippets, `.md` sidecars, custom attributes, and MkDocs navigation merging into `.demo-output/`:
+The repository includes a two-project C# 14 showcase solution ([`demo/Documentation.Exporter.Demo.slnx`](demo/Documentation.Exporter.Demo.slnx)) exercising XML tags, `.cs` snippets, `.md` sidecars, custom attributes, and MkDocs navigation merging into `build/.demo-output/`:
 
 ```powershell
 # Local demo export (Mermaid diagrams by default)

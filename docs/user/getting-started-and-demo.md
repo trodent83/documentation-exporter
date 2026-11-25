@@ -1,6 +1,6 @@
 # Getting Started & Demo Showcase
 
-This repository includes a complete multi-project showcase solution ([`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx)) so you can run `Documentation.Exporter` out of the box and inspect real generated documentation in `.demo-output/`.
+This repository includes a complete multi-project showcase solution ([`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx)) so you can run `Documentation.Exporter` out of the box and inspect real generated documentation in `build/.demo-output/`.
 
 ---
 
@@ -17,7 +17,7 @@ flowchart LR
     end
 
     DemoInputs --> Runner["scripts/manual/Run-DemoExport.ps1 (solution --strict)"]
-    Runner --> OutRoot[".demo-output/index.md & mkdocs.nav.yml"]
+    Runner --> OutRoot["build/.demo-output/index.md & mkdocs.nav.yml"]
     OutRoot --> OutContracts["DemoContracts/index.md (References Table Only)"]
     OutRoot --> OutLib["DemoLibrary/index.md (References + Dependency Tree + Architecture)"]
 ```
@@ -50,7 +50,7 @@ The standalone executable lands at:
 
 ### Option A: Local Execution (`scripts/manual/Run-DemoExport.ps1`)
 
-[`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1) builds both [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj), copies [`demo/mkdocs.base.nav.yml`](../../demo/mkdocs.base.nav.yml), and exports the full demo documentation set into `.demo-output/` using `--diagram-format Mermaid` by default:
+[`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1) builds both [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj), copies [`demo/mkdocs.base.nav.yml`](../../demo/mkdocs.base.nav.yml), and exports the full demo documentation set into `build/.demo-output/` using `--diagram-format Mermaid` by default:
 
 ```powershell
 # Default Debug showcase with Mermaid diagrams
@@ -95,12 +95,12 @@ The demo solution illustrates multi-assembly documentation generation, cross-ass
 
 ---
 
-## 4. What Gets Generated in `.demo-output/`
+## 4. What Gets Generated in `build/.demo-output/`
 
-After running [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1), `.demo-output/` has this MkDocs-ready layout (**164** Markdown files, **952** verified relative links & heading anchors under `--strict`, **94.6%** documentation coverage across **32** exported types, plus `quality-report.json`):
+After running [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1), `build/.demo-output/` has this MkDocs-ready layout (**164** Markdown files, **952** verified relative links & heading anchors under `--strict`, **94.6%** documentation coverage across **32** exported types, plus `quality-report.json`):
 
 ```text
-.demo-output/
+build/.demo-output/
 ├── index.md                                   # Root solution index + solution Architecture Diagram
 ├── mkdocs.nav.yml                             # Extended navigation under Developer Portal -> API Reference
 ├── quality-report.json                        # Structured quality & diagnostics report (DOC001–DOC007)
@@ -133,10 +133,10 @@ After running [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-Dem
 
 ### Guided Walkthrough of Key Emitted Files
 
-- **`.demo-output/index.md`**: Links directly to `Documentation.Exporter.DemoContracts/index.md` and `Documentation.Exporter.DemoLibrary/index.md`, paired with a solution-wide `## Architecture Diagram`.
-- **`.demo-output/quality-report.json`**: Machine-readable quality summary reporting symbol coverage, verified links count, severity tallies, and structured `DOC001`–`DOC007` findings.
-- **`.demo-output/Documentation.Exporter.DemoContracts/index.md`**: Shows `## Assembly References` containing only `.NET` framework assemblies (`net11.0`), so `## Assembly Dependency Tree` is omitted cleanly.
-- **`.demo-output/Documentation.Exporter.DemoLibrary/index.md`**: Links `Documentation.Exporter.DemoContracts` directly across assemblies inside `## Assembly References`, and renders `## Assembly Dependency Tree` showing the `Linked (Project)` arrow.
-- **`.demo-output/Documentation.Exporter.DemoContracts/Auditing/ISettlementAuditSink/index.md`**: Even though `DemoContracts` does not depend on `DemoLibrary`, cross-assembly indexing automatically lists `CrossAssemblyAuditReporter` under `## Known Implementations` and `TryWriteVerifiedAudit` under `## Extension Methods`.
+- **`build/.demo-output/index.md`**: Links directly to `Documentation.Exporter.DemoContracts/index.md` and `Documentation.Exporter.DemoLibrary/index.md`, paired with a solution-wide `## Architecture Diagram`.
+- **`build/.demo-output/quality-report.json`**: Machine-readable quality summary reporting symbol coverage, verified links count, severity tallies, and structured `DOC001`–`DOC007` findings.
+- **`build/.demo-output/Documentation.Exporter.DemoContracts/index.md`**: Shows `## Assembly References` containing only `.NET` framework assemblies (`net11.0`), so `## Assembly Dependency Tree` is omitted cleanly.
+- **`build/.demo-output/Documentation.Exporter.DemoLibrary/index.md`**: Links `Documentation.Exporter.DemoContracts` directly across assemblies inside `## Assembly References`, and renders `## Assembly Dependency Tree` showing the `Linked (Project)` arrow.
+- **`build/.demo-output/Documentation.Exporter.DemoContracts/Auditing/ISettlementAuditSink/index.md`**: Even though `DemoContracts` does not depend on `DemoLibrary`, cross-assembly indexing automatically lists `CrossAssemblyAuditReporter` under `## Known Implementations` and `TryWriteVerifiedAudit` under `## Extension Methods`.
 
 Continue to [CLI Commands, Options, & JSON Configuration](cli-and-configuration.md) to run the exporter against your own solutions, or grab the [AI Agent Command for Authoring C# Interface & API XML Documentation](ai-agent-documentation-command.md) to have an AI coding agent document your project's interfaces and public API contracts before exporting.

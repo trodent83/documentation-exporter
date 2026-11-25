@@ -105,7 +105,7 @@ dotnet run --project src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.c
   solution \
   --solution "/workspace/demo/Documentation.Exporter.Demo.slnx" \
   --configuration Debug \
-  --output "/workspace/.demo-output" \
+  --output "/workspace/build/.demo-output" \
   --examples-dir "/workspace/demo/Documentation.Exporter.DemoLibrary/docs_extra/examples" \
   --overrides-dir "/workspace/demo/Documentation.Exporter.DemoLibrary/docs_extra/overrides" \
   --strict \
@@ -125,7 +125,7 @@ Run either the `solution`, `assembly`, or `config` subcommand by mounting your w
 ```bash
 docker run --rm \
   -v "$(pwd):/workspace:ro" \
-  -v "$(pwd)/.demo-output:/output:rw" \
+  -v "$(pwd)/build/.demo-output:/output:rw" \
   documentation-exporter:latest \
   assembly \
   --assembly "/workspace/build/bin/Documentation.Exporter.DemoLibrary/debug/Documentation.Exporter.DemoLibrary.dll" \

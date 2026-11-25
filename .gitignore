@@ -2,7 +2,7 @@
 # 1. Centralized, Legacy & Demo Build Outputs
 # =============================================================================
 # Root centralized build directory configured via <ArtifactsPath> in Directory.Build.props,
-# demo export output folder (.demo-output/), and standard MSBuild fallback directories.
+# demo export output folder (build/.demo-output/), and standard MSBuild fallback directories.
 [Bb]uild/
 .demo-output/
 docs/api/

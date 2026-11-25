@@ -60,7 +60,7 @@ flowchart LR
 | **`Framework (netX.Y)`** | Target `.NET` BCL framework reference |
 | **`Compiled`** | Bound assembly version from IL metadata when no project/package constraint applies |
 
-**Real Generated Output from `.demo-output/Documentation.Exporter.DemoLibrary/index.md`:**
+**Real Generated Output from `build/.demo-output/Documentation.Exporter.DemoLibrary/index.md`:**
 
 | Reference | Kind | Version | Version Linking | Strong-Named |
 | :--- | :--- | :--- | :--- | :--- |
@@ -82,7 +82,7 @@ On per-assembly `index.md` pages (and single-assembly root `index.md`, omitted o
   - **Strong-Named target assembly**: Solid green link (`#2E7D32`).
   - **Unsigned target assembly**: Dashed gray link (`#757575`).
 
-**Real Generated Output from `.demo-output/Documentation.Exporter.DemoLibrary/index.md` (Default `Mermaid` Mode):**
+**Real Generated Output from `build/.demo-output/Documentation.Exporter.DemoLibrary/index.md` (Default `Mermaid` Mode):**
 
 ```mermaid
 flowchart LR
@@ -117,7 +117,7 @@ Root `index.md` (solution-wide) and each assembly `index.md` (scoped to that ass
 
 Each non-enum type with base classes, implemented interfaces, or derived types renders a **`## Type Diagram`** block directly beneath `## Implemented Interfaces`.
 
-**Real Generated Output from `.demo-output/Documentation.Exporter.DemoLibrary/Services/OrderProcessingService/index.md`:**
+**Real Generated Output from `build/.demo-output/Documentation.Exporter.DemoLibrary/Services/OrderProcessingService/index.md`:**
 
 ```mermaid
 classDiagram

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Builds the showcase demo solution (demo/Documentation.Exporter.Demo.slnx), builds the Documentation Exporter Linux Docker container image from Dockerfile, and runs the containerized CLI to export unified multi-assembly Markdown documentation into .demo-output/.
+    Builds the showcase demo solution (demo/Documentation.Exporter.Demo.slnx), builds the Documentation Exporter Linux Docker container image from Dockerfile, and runs the containerized CLI to export unified multi-assembly Markdown documentation into build/.demo-output/.
 
 .DESCRIPTION
     Mirrors the behavior of `scripts/manual/Run-DemoExport.ps1` across four stages, executing the documentation export inside an isolated Linux Docker container rather than invoking the local host binary directly:
@@ -16,7 +16,7 @@
 
 .PARAMETER OutputDirectory
     The host directory path (relative to the repository root) bind-mounted to `/output` inside the container where generated Markdown files, `mkdocs.nav.yml`, and `quality-report.json` will be written.
-    Note: Any existing contents in this directory are deleted prior to export. Defaults to ".demo-output".
+    Note: Any existing contents in this directory are deleted prior to export. Defaults to "build/.demo-output".
 
 .PARAMETER LogLevel
     The minimum console logging verbosity passed to `--log-level` on the containerized `Documentation.Exporter.Cli`.
@@ -38,21 +38,21 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps1
-    Builds the demo solution in Debug mode, builds the `documentation-exporter:demo` Docker image, and exports the demo documentation with Mermaid diagrams into `.demo-output/`.
+    Builds the demo solution in Debug mode, builds the `documentation-exporter:demo` Docker image, and exports the demo documentation with Mermaid diagrams into `build/.demo-output/`.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps1 -NoCache -Configuration Release -DiagramFormat PlantUml
-    Forces a clean uncached Docker image build, compiles the demo in Release mode, and exports PlantUML diagrams into `.demo-output/`.
+    Forces a clean uncached Docker image build, compiles the demo in Release mode, and exports PlantUML diagrams into `build/.demo-output/`.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps1 -OutputDirectory ".docker-demo-out" -ImageTag "docexporter:local" -LogLevel Debug
-    Builds and runs a custom-tagged container (`docexporter:local`) with Debug logging and writes output to `.docker-demo-out/`.
+    powershell -ExecutionPolicy Bypass -File scripts/manual/Run-DemoExport-Docker.ps1 -OutputDirectory "build/.docker-demo-out" -ImageTag "docexporter:local" -LogLevel Debug
+    Builds and runs a custom-tagged container (`docexporter:local`) with Debug logging and writes output to `build/.docker-demo-out/`.
 #>
 [CmdletBinding()]
 param (
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug",
-    [string]$OutputDirectory = ".demo-output",
+    [string]$OutputDirectory = "build/.demo-output",
     [string]$LogLevel = "Information",
     [ValidateSet("Mermaid", "PlantUml", "None")]
     [string]$DiagramFormat = "Mermaid",

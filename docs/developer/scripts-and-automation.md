@@ -63,7 +63,7 @@ powershell -ExecutionPolicy Bypass -File scripts/manual/Run-CodeCoverage.ps1 -Mi
 
 ### B. `scripts/manual/Run-DemoExport.ps1`
 
-Builds the showcase demo C# solution ([`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx)) and local CLI executable ([`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj)) via [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1), then runs a full end-to-end documentation export into `.demo-output/` using the local `.exe` / binary:
+Builds the showcase demo C# solution ([`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx)) and local CLI executable ([`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj)) via [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1), then runs a full end-to-end documentation export into `build/.demo-output/` using the local `.exe` / binary:
 
 ```mermaid
 flowchart LR
@@ -77,7 +77,7 @@ flowchart LR
 | Parameter | Type | Valid Values | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `-Configuration` | `string` | `Debug`, `Release` | `Debug` | MSBuild configuration for demo projects and CLI binary lookup |
-| `-OutputDir` | `string` | Any relative folder | `.demo-output` | Output directory relative to repository root |
+| `-OutputDir` | `string` | Any relative folder | `build/.demo-output` | Output directory relative to repository root |
 | `-LogLevel` | `string` | Any `Microsoft.Extensions.Logging.LogLevel` | `Information` | Console logging threshold forwarded to `--log-level` |
 | `-DiagramFormat` | `string` | `Mermaid`, `PlantUml`, `None` | `Mermaid` | Preferred diagram generator forwarded to `--diagram-format` |
 
@@ -85,7 +85,7 @@ flowchart LR
 
 1. **`[1/3]` Build Demo & CLI**: Runs `dotnet build` on [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj) under `-c $Configuration`. Resolves the CLI binary under `build/bin/Documentation.Exporter.Cli/{configLower}/` (`Documentation.Exporter.Cli.exe` on Windows, `Documentation.Exporter.Cli` on Linux/macOS).
 2. **`[2/3]` Clean Target & Execute `solution` Command**: Recreates `$OutputDir`, copies [`demo/mkdocs.base.nav.yml`](../../demo/mkdocs.base.nav.yml) into `$OutputDir/mkdocs.nav.yml`, and invokes:
-   `Documentation.Exporter.Cli solution --solution demo/Documentation.Exporter.Demo.slnx --configuration $Configuration --exclude "*.Tests" "*.Benchmarks" --diagram-format $DiagramFormat --output ... --examples-dir ... --overrides-dir ... --nav-file ... --nav-entry-point "Developer Portal/API Reference" --strict --report-file .demo-output/quality-report.json --report-format Json --log-level $LogLevel`
+   `Documentation.Exporter.Cli solution --solution demo/Documentation.Exporter.Demo.slnx --configuration $Configuration --exclude "*.Tests" "*.Benchmarks" --diagram-format $DiagramFormat --output ... --examples-dir ... --overrides-dir ... --nav-file ... --nav-entry-point "Developer Portal/API Reference" --strict --report-file build/.demo-output/quality-report.json --report-format Json --log-level $LogLevel`
 3. **`[3/3]` Report Output**: Enumerates every generated `.md` file and `quality-report.json` in `$OutputDir` with its byte size.
 
 #### Usage Examples
@@ -116,7 +116,7 @@ flowchart LR
 | Parameter | Type | Valid Values | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `-Configuration` | `string` | `Debug`, `Release` | `Debug` | Build configuration for compiling [`Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) locally before mounting |
-| `-OutputDirectory` | `string` | Any relative folder | `.demo-output` | Host folder bind-mounted to `/output` inside the container |
+| `-OutputDirectory` | `string` | Any relative folder | `build/.demo-output` | Host folder bind-mounted to `/output` inside the container |
 | `-LogLevel` | `string` | Any `LogLevel` | `Information` | Console logging threshold forwarded to `--log-level` |
 | `-DiagramFormat` | `string` | `Mermaid`, `PlantUml`, `None` | `Mermaid` | Preferred diagram generator forwarded to `--diagram-format` |
 | `-ImageTag` | `string` | Docker image tag | `documentation-exporter:demo` | Tag built and invoked by Docker |
@@ -177,7 +177,7 @@ flowchart LR
 | Job | Runner(s) | Checks Executed |
 | :--- | :--- | :--- |
 | **`build-and-test`** | `ubuntu-latest`, `windows-latest` | Full-history checkout (`fetch-depth: 0`) for MinVer, `dotnet restore` & `dotnet build -c Release` (zero warnings/errors), resolved SemVer logging, `dotnet publish` CLI + verification of staged `Plugins.Diagrams` & `Plugins.Navigation.MkDocs` without duplicate `Abstractions.dll`, `dotnet pack` + `doc-exporter` `.NET Tool` ZIP & install smoke test, full `dotnet test` (482 tests) with Coverlet Cobertura coverage (`MIN_LINE_COVERAGE: 90.0%`, `MIN_BRANCH_COVERAGE: 85.0%`), Job Summary reporting, and `TestResults/` artifact upload |
-| **`demo-export-verification`** | `ubuntu-latest` | Builds [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj) in `Release`, runs [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1) with `--strict` for both `Mermaid` and `PlantUml`, verifies `.demo-output/mkdocs.nav.yml`, `architecture.puml`, and `quality-report.json`, and uploads `.demo-output/` |
+| **`demo-export-verification`** | `ubuntu-latest` | Builds [`demo/Documentation.Exporter.Demo.slnx`](../../demo/Documentation.Exporter.Demo.slnx) and [`Documentation.Exporter.Cli`](../../src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj) in `Release`, runs [`scripts/manual/Run-DemoExport.ps1`](../../scripts/manual/Run-DemoExport.ps1) with `--strict` for both `Mermaid` and `PlantUml`, verifies `build/.demo-output/mkdocs.nav.yml`, `architecture.puml`, and `quality-report.json`, and uploads `build/.demo-output/` |
 | **`ci-gate`** (`CI Gate`) | `ubuntu-latest` | Aggregator job (`if: always()`) that passes **only** when both `build-and-test` (all OS matrix runs) and `demo-export-verification` succeed |
 
 > [!TIP]
@@ -196,7 +196,7 @@ flowchart LR
 | :--- | :--- | :--- |
 | **GitHub Actions Minutes** | **Unlimited** on `ubuntu-latest`, `windows-latest`, and `macos-latest` | **2,000 free min/month** (`ubuntu-latest` = 1×, `windows-latest` = 2×, `macos-latest` = 10×) |
 | **Branch Protection / Rulesets (`CI Gate` on `main`)** | **Supported** (free on all public repos) | **Not available** on GitHub Free (requires Public visibility or GitHub Pro/Team) |
-| **Artifact Storage (`TestResults`, `.demo-output`)** | **500 MB free** (runs upload a few MB with 7–14 day retention) | **500 MB free** (shared across account; 7–14 day retention keeps usage minimal) |
+| **Artifact Storage (`TestResults`, `build/.demo-output`)** | **500 MB free** (runs upload a few MB with 7–14 day retention) | **500 MB free** (shared across account; 7–14 day retention keeps usage minimal) |
 | **GitHub Releases (`release.yml`)** | **Unlimited** (`GITHUB_TOKEN` + `permissions: contents: write`, no PAT needed) | **Supported** (`GITHUB_TOKEN` + `permissions: contents: write`, no PAT needed) |
 
 > [!IMPORTANT]
