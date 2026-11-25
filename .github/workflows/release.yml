@@ -139,7 +139,7 @@ jobs:
             try {
               $rawLabels = & gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '[.[].labels[].name]' 2>$null
               if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($rawLabels)) {
-                $parsedLabels = $rawLabels | ConvertFrom-Json
+                $parsedLabels = ($rawLabels | Out-String) | ConvertFrom-Json
                 if ($parsedLabels) {
                   $prLabels = @($parsedLabels | ForEach-Object { $_.ToString().Trim().ToLowerInvariant() })
                 }
@@ -406,7 +406,7 @@ jobs:
           try {
             dotnet tool install `
               --tool-path $toolTempDir `
-              --add-source $nupkgsDir `
+              --source $nupkgsDir `
               Documentation.Exporter.Cli `
               --version '${{ needs.verify.outputs.version }}'
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -456,7 +456,7 @@ jobs:
       - name: Generate SHA-256 checksums
         working-directory: release-assets
         run: |
-          sha256sum * > checksums.sha256
+          sha256sum documentation-exporter-* Documentation.Exporter.* > checksums.sha256
           cat checksums.sha256
 
       - name: Create GitHub Release
@@ -509,7 +509,10 @@ jobs:
 
       - name: Push packages to NuGet.org
         run: |
-          dotnet nuget push nupkgs/*.nupkg \
-            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+          for pkg in nupkgs/*.nupkg; do
+            echo "Pushing $pkg..."
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done

@@ -247,6 +247,12 @@ flowchart LR
 
 ### Cutting a Release & Container Versioning
 
+Releases can be triggered in three ways:
+
+1. **Automatic on Merge to `main`**: Merge any PR into `main` (use `breaking-change`, `feature`/`enhancement`, or default patch; add `skip-release` or `[skip release]` to suppress a release).
+2. **Manual UI (`workflow_dispatch`)**: Open **Actions → Release → Run workflow** and choose `bump` (`auto`, `patch`, `minor`, `major`) or enter an explicit `version` (e.g. `1.0.0` or `1.0.0-rc.1`).
+3. **Manual Git Tag Push**: Push a `v*.*.*` tag directly:
+
 ```powershell
 # 1. Inspect the current resolved SemVer locally
 dotnet msbuild src/Documentation.Exporter.Cli/Documentation.Exporter.Cli.csproj -target:MinVer -getProperty:Version -p:Configuration=Release
@@ -288,3 +294,14 @@ The `publish-nuget` job in [`.github/workflows/release.yml`](../../.github/workf
 | **Documentation** | `documentation`, `docs` |
 | **CI, Build, & Dependencies** | `ci`, `build`, `dependencies` |
 | **Other Changes** | `*` (catch-all for unlabeled PRs) |
+
+### Automated Dependency Updates (`.github/dependabot.yml`)
+
+[`.github/dependabot.yml`](../../.github/dependabot.yml) opens weekly Monday update PRs across NuGet (`/`), GitHub Actions (`/`), and `Dockerfile` (`/`), automatically labeled `dependencies` (plus `ci` or `build`). Every Dependabot PR runs through `CI Gate` (`ci.yml`); add `skip-release` before merging if you want to batch dependency bumps without cutting a release.
+
+### One-Time GitHub & NuGet.org Setup Checklist
+
+1. **Public Visibility & `CI Gate` on `main`**: Under **Settings → Branches** (or **Rulesets**), protect `main` by requiring pull requests and the **`CI Gate`** status check *(free for Public repositories on GitHub Free)*.
+2. **Actions Permissions**: Under **Settings → Actions → General → Workflow permissions**, ensure workflows can use their scoped `permissions:` blocks (`contents: write` in `release.yml` to create `vX.Y.Z` tags/releases, with no tag protection rule blocking `GITHUB_TOKEN` on `v*`).
+3. **NuGet.org Trusted Publishing**: On **nuget.org → Account → Trusted Publishing**, register repository owner `trodent83`, repository `documentation-exporter`, and workflow `release.yml`.
+4. **GitHub Variable `NUGET_USER`**: Under **Settings → Secrets and variables → Actions → Variables**, add `NUGET_USER` set to your NuGet.org profile username so `publish-nuget` authenticates via OIDC (`NuGet/login@v1`).

@@ -142,7 +142,7 @@ jobs:
           try {
             dotnet tool install `
               --tool-path $toolTempDir `
-              --add-source $nupkgsDir `
+              --source $nupkgsDir `
               Documentation.Exporter.Cli `
               --version $env:RESOLVED_VERSION
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
